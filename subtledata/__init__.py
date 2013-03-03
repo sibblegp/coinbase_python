@@ -107,7 +107,10 @@ class SDUser(SDFirstClassObject):
     def __init__(self, api_client, user_id=False, user_name=None, use_cache=True, *args, **kwargs):
         super(SDUser, self).__init__(api_client, use_cache)
 
-        self._swagger_user = self._swagger_users_api.getUser(1657, self._api_key)
+        if user_id is not None:
+            self._swagger_user = self._swagger_users_api.getUser(user_id, self._api_key)
+        else:
+            pass
 
         for attribute in self._swagger_user.swaggerTypes:
             self.__setattr__(attribute, getattr(self._swagger_user, attribute))
