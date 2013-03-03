@@ -23,6 +23,9 @@ class SDLocation(SDFirstClassObject):
 
         def __init__(self, swagger_menu):
 
+            #Set up the menu holder
+            self._swagger_menu = None
+
             #Set up the public lists
             self.items = []
             self.categories = swagger_menu
@@ -94,7 +97,7 @@ class SDLocation(SDFirstClassObject):
     @property
     def menu(self):
 
-        if not hasattr(self, '_swagger_menu'):
+        if self._swagger_menu is None:
             self.update_menu()
 
         return self.SDMenu(self._swagger_menu)
@@ -110,7 +113,7 @@ class SDUser(SDFirstClassObject):
         if user_id is not None:
             self._swagger_user = self._swagger_users_api.getUser(user_id, self._api_key)
         else:
-            pass
+            self._swagger_user = self._swagger_users_api.searchUsersByName(user_name, self._api_key, self._use_cache)
 
         for attribute in self._swagger_user.swaggerTypes:
             self.__setattr__(attribute, getattr(self._swagger_user, attribute))
