@@ -7,16 +7,16 @@ from api import swagger
 from api.LocationsApi import LocationsApi
 from api.models import Location as SwaggerLocation
 
-class SDFirstClassObject(object):
 
+class SDFirstClassObject(object):
     def __init__(self, api_client, use_cache=True, *args, **kwargs):
         self._api_key = api_client.apiKey
         self._api_client = api_client
         self._use_cache = use_cache
         self._swagger_location_api = LocationsApi(self._api_client)
 
-class SDLocation(SDFirstClassObject):
 
+class SDLocation(SDFirstClassObject):
     class SDMenu(object):
 
         def __init__(self, swagger_menu):
@@ -71,7 +71,8 @@ class SDLocation(SDFirstClassObject):
         self._location_id = location_id
 
         #Get the location via swagger
-        self._swagger_location = self._swagger_location_api.getLocation(location_id, self._api_key, use_cache=self._use_cache)
+        self._swagger_location = self._swagger_location_api.getLocation(location_id, self._api_key,
+                                                                        use_cache=self._use_cache)
 
         #Set attributes of first class Location to match Swagger Location object
         for attribute in self._swagger_location.swaggerTypes:
@@ -85,7 +86,8 @@ class SDLocation(SDFirstClassObject):
         if not self._use_cache:
             use_cache = False
 
-        self._swagger_menu = self._swagger_location_api.getLocationMenu(self._location_id, self._api_key, use_cache=use_cache)
+        self._swagger_menu = self._swagger_location_api.getLocationMenu(self._location_id, self._api_key,
+                                                                        use_cache=use_cache)
 
     @property
     def menu(self):
@@ -95,8 +97,13 @@ class SDLocation(SDFirstClassObject):
 
         return self.SDMenu(self._swagger_menu)
 
-class SubtleData(object):
+class SDUser(SDFirstClassObject):
+    pass
 
+class SDTicket(SDFirstClassObject):
+    pass
+
+class SubtleData(object):
     def __init__(self, api_key, use_cache=True):
         """
 
@@ -108,7 +115,6 @@ class SubtleData(object):
         self.api_client = swagger.ApiClient(api_key, config.SD_ENDPOINT)
 
     def Location(self, location_id, use_cache=True, include_menu=False):
-
         if not self.use_cache:
             use_cache = False
 
