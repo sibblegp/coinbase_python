@@ -7,6 +7,7 @@ from api import swagger
 from api.LocationsApi import LocationsApi
 from api.models import Location as SwaggerLocation
 
+from api.UsersApi import UsersApi
 
 class SDFirstClassObject(object):
     def __init__(self, api_client, use_cache=True, *args, **kwargs):
@@ -14,6 +15,7 @@ class SDFirstClassObject(object):
         self._api_client = api_client
         self._use_cache = use_cache
         self._swagger_location_api = LocationsApi(self._api_client)
+        self._swagger_users_api = UsersApi(self._api_client)
 
 
 class SDLocation(SDFirstClassObject):
@@ -97,8 +99,18 @@ class SDLocation(SDFirstClassObject):
 
         return self.SDMenu(self._swagger_menu)
 
+    def openTicket(self, user_id):
+        pass
+
 class SDUser(SDFirstClassObject):
-    pass
+
+    def __init__(self, api_client, user_id=False, user_name=None, use_cache=True, *args, **kwargs):
+        super(SDUser, self).__init__(api_client, use_cache)
+
+        self._swagger_user = self._swagger_users_api.getUser(1657, self._api_key)
+
+        for attribute in self._swagger_user.swaggerTypes:
+            self.__setattr__(attribute, getattr(self._swagger_user, attribute))
 
 class SDTicket(SDFirstClassObject):
     pass
@@ -119,3 +131,9 @@ class SubtleData(object):
             use_cache = False
 
         return SDLocation(location_id, self.api_client, include_menu, use_cache)
+
+    def User(self, user_id=None, user_name=None, use_cache=True):
+        if not self.use_cache:
+            use_cache = False
+
+        return SDUser(self.api_client, 1657)
