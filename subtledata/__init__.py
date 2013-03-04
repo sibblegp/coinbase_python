@@ -5,9 +5,11 @@ import config
 from api import swagger
 
 from api.LocationsApi import LocationsApi
-from api.models import Location as SwaggerLocation
-
 from api.UsersApi import UsersApi
+from api.TicketsApi import TicketsApi
+
+import exceptions as E
+
 
 class SDFirstClassObject(object):
     def __init__(self, api_client, use_cache=True, *args, **kwargs):
@@ -16,6 +18,7 @@ class SDFirstClassObject(object):
         self._use_cache = use_cache
         self._swagger_location_api = LocationsApi(self._api_client)
         self._swagger_users_api = UsersApi(self._api_client)
+        self._swagger_tickets_api = TicketsApi(self._api_client)
 
 
 class SDLocation(SDFirstClassObject):
@@ -99,26 +102,146 @@ class SDLocation(SDFirstClassObject):
 
         return self.SDMenu(self._swagger_menu)
 
-    def openTicket(self, user_id):
+    def open_ticket_for_dine_in(self, user_id):
+
+        #Return a SDTicket
         pass
 
-class SDUser(SDFirstClassObject):
+    def open_ticket_for_take_out(self, user_id):
 
+        #Return a SDTicket
+        pass
+
+    def open_ticket_for_delivery(self, user_id):
+
+        #Return a SDTicket
+        pass
+
+
+class SDUser(SDFirstClassObject):
     def __init__(self, api_client, user_id=False, user_name=None, use_cache=True, *args, **kwargs):
         super(SDUser, self).__init__(api_client, use_cache)
 
         if user_id is not None:
-            self._swagger_user = self._swagger_users_api.getUser(user_id, self._api_key)
+            self._swagger_user = self._swagger_users_api.getUser(user_id, self._api_key, use_cache=self._use_cache)
+        elif user_name is not None:
+            self._swagger_user = self._swagger_users_api.searchUsersByName(user_name, self._api_key,
+                                                                           use_cache=self._use_cache)
         else:
-            pass
+            self._swagger_user = None
 
-        for attribute in self._swagger_user.swaggerTypes:
-            self.__setattr__(attribute, getattr(self._swagger_user, attribute))
+        if self._swagger_user is not None:
+            for attribute in self._swagger_user.swaggerTypes:
+                self.__setattr__(attribute, getattr(self._swagger_user, attribute))
+
+    def update_info(self):
+        pass
+
 
 class SDTicket(SDFirstClassObject):
-    pass
+    def __init__(self, api_client, ticket_id, user_id=None, *args, **kwargs):
+        super(SDTicket, self).__init__(api_client, False)
+
+        self._swagger_ticket = self._swagger_tickets_api.getTicket(ticket_id, user_id)
+
+        if self._swagger_ticket is not None:
+            for attribute in self._swagger_ticket.swaggerTypes:
+                self.__setattr__(attribute, getattr(self._swagger_ticket, attribute))
+
+    def add_items_to_order(self, item_id, quantity, instructions=None, modifiers=None):
+
+        if hasattr(self, 'user_id') and hasattr(self, 'ticket_id'):
+            if self.user_id is not None and self.ticket_id is not None:
+                post_body = {
+                    'item_id': item_id,
+                    'quantity': quantity,
+
+                }
+
+                if instructions is not None:
+                    post_body['instructions'] = instructions
+
+                if modifiers is not None:
+                    post_body['modifiers'] = modifiers
+
+                returned_status = self._swagger_tickets_api.addItemsToOrder(self.ticket_id, self.user_id, self._api_key,
+                                                                            post_body)
+
+                return returned_status
+
+            else:
+                raise E.NoUserSetOnTicket
+        else:
+            raise E.NoUserSetOnTicket
+
+    def submit_order(self):
+
+        if hasattr(self, 'user_id') and hasattr(self, 'ticket_id'):
+            if self.user_id is not None and self.ticket_id is not None:
+
+                returned_status = self._swagger_tickets_api.submitOrder(self.ticket_id, self.user_id, self._api_key,
+                                                                        body={})
+
+                return returned_status
+            else:
+                raise E.NoUserSetOnTicket
+        else:
+            raise E.NoUserSetOnTicket
+
 
 class SubtleData(object):
+    class _SDFirstClassCollection(object):
+
+        def __init__(self, parent, *args, **kwargs):
+            self._api_key = parent.api_key
+            self._use_cache = parent._use_cache
+            self._api_client = parent._api_client
+
+    class _SDLocationCollection(_SDFirstClassCollection):
+
+        def __init__(self, parent):
+            super(SubtleData._SDLocationCollection, self).__init__(parent)
+
+        def create(self):
+            pass
+
+        def get(self, location_id, use_cache=True, include_menu=False):
+            if not self._use_cache:
+                use_cache = False
+
+            return SDLocation(location_id, self._api_client, include_menu, use_cache)
+
+    class _SDUserCollection(_SDFirstClassCollection):
+
+        def __init__(self, parent):
+            super(SubtleData._SDUserCollection, self).__init__(parent)
+
+        def create(self):
+            pass
+
+        def get(self, user_id, use_cache=True):
+            if not self._use_cache:
+                use_cache = False
+
+            return SDUser(self._api_client, user_id=user_id, use_cache=use_cache)
+
+        def get_with_name(self, user_name, use_cache=True):
+            if not self._use_cache:
+                use_cache = False
+
+            return SDUser(self._api_client, user_name=user_name, use_cache=use_cache)
+
+    class _SDTicketCollection(_SDFirstClassCollection):
+
+        def __init__(self, parent):
+            super(SubtleData._SDTicketCollection, self).__init__(parent)
+
+        def get(self, ticket_id, user_id=None):
+            return SDTicket(self._api_client, ticket_id=ticket_id, user_id=user_id)
+
+        def get_with_pos_id(self, pos_id):
+            pass
+
     def __init__(self, api_key, use_cache=True):
         """
 
@@ -126,17 +249,8 @@ class SubtleData(object):
         :param use_cache: Use Subtledata's Redis Caching layer to accelerate delivery of results.  This specific setting is global to all calls for this API object.
         """
         self.api_key = api_key
-        self.use_cache = use_cache
-        self.api_client = swagger.ApiClient(api_key, config.SD_ENDPOINT)
-
-    def Location(self, location_id, use_cache=True, include_menu=False):
-        if not self.use_cache:
-            use_cache = False
-
-        return SDLocation(location_id, self.api_client, include_menu, use_cache)
-
-    def User(self, user_id=None, user_name=None, use_cache=True):
-        if not self.use_cache:
-            use_cache = False
-
-        return SDUser(self.api_client, 1657)
+        self._use_cache = use_cache
+        self._api_client = swagger.ApiClient(api_key, config.SD_ENDPOINT)
+        self.Locations = SubtleData._SDLocationCollection(self)
+        self.Users = SubtleData._SDTicketCollection(self)
+        self.Tickets = SubtleData._SDTicketCollection(self)
