@@ -16,7 +16,7 @@ class SDFirstClassObject(object):
         self._api_key = api_client.apiKey
         self._api_client = api_client
         self._use_cache = use_cache
-        self._swagger_location_api = LocationsApi(self._api_client)
+        self._swagger_locations_api = LocationsApi(self._api_client)
         self._swagger_users_api = UsersApi(self._api_client)
         self._swagger_tickets_api = TicketsApi(self._api_client)
 
@@ -71,17 +71,57 @@ class SDLocation(SDFirstClassObject):
 
             return item_object
 
+    class SDTable(object):
+
+        def __init__(self, swagger_table, parent):
+
+            self._swagger_locations_api = parent._swagger_locations_api
+            self._swagger_ticket_api = parent._swagger_tickets_api
+            self._api_key = parent._api_client.apiKey
+            self._swagger_table = swagger_table
+            self._location_id = parent.location_id
+            for attribute in self._swagger_table.swaggerTypes:
+                self.__setattr__(attribute, getattr(self._swagger_table, attribute))
+
+        def open_ticket(self, user_id, device_id, number_of_people_in_party=1, business_expense=False, return_ticket=True):
+
+            if hasattr(self, 'revenue_center') and hasattr(self, 'subtledata_id'):
+                ticket_body = {
+                    "revenue_center_id": self.revenue_center,
+                    "number_of_people_in_party": number_of_people_in_party,
+                    "user_id": user_id,
+                    "device_id": device_id,
+                    "table_id": self.subtledata_id,
+                    "business_expense": business_expense
+                }
+            else:
+                raise KeyError('Table missing key data')
+
+            #Send the request
+            ticket_response = self._swagger_locations_api.createTicket(self._location_id, self._api_key, ticket_type='dine-in', body=ticket_body)
+
+            print ticket_response
+
+            #If return_ticket
+            #Get the totals
+
+            #Return an SDTicket
+
+
     def __init__(self, location_id, api_client, include_menu, use_cache, *args, **kwargs):
         super(SDLocation, self).__init__(api_client, use_cache)
         self._location_id = location_id
 
         #Get the location via swagger
-        self._swagger_location = self._swagger_location_api.getLocation(location_id, self._api_key,
+        self._swagger_location = self._swagger_locations_api.getLocation(location_id, self._api_key,
                                                                         use_cache=self._use_cache)
 
         #Set attributes of first class Location to match Swagger Location object
         for attribute in self._swagger_location.swaggerTypes:
             self.__setattr__(attribute, getattr(self._swagger_location, attribute))
+
+        #Set the tables to be our type
+        self.tables = [SDLocation.SDTable(table, self) for table in self.tables]
 
         if include_menu:
             self.update_menu(use_cache)
@@ -91,7 +131,7 @@ class SDLocation(SDFirstClassObject):
         if not self._use_cache:
             use_cache = False
 
-        self._swagger_menu = self._swagger_location_api.getLocationMenu(self._location_id, self._api_key,
+        self._swagger_menu = self._swagger_locations_api.getLocationMenu(self._location_id, self._api_key,
                                                                         use_cache=use_cache)
 
     @property
@@ -102,8 +142,12 @@ class SDLocation(SDFirstClassObject):
 
         return self.SDMenu(self._swagger_menu)
 
-    def open_ticket_for_dine_in(self, user_id):
+    def open_ticket_for_dine_in(self, user_id, device_id, table_id, business_expense=False):
+        new_ticket_body = {
 
+        }
+
+        #TODO:  Implement Later
         #Return a SDTicket
         pass
 
@@ -142,7 +186,8 @@ class SDTicket(SDFirstClassObject):
     def __init__(self, api_client, ticket_id, user_id=None, *args, **kwargs):
         super(SDTicket, self).__init__(api_client, False)
 
-        self._swagger_ticket = self._swagger_tickets_api.getTicket(ticket_id, user_id)
+        #TODO:  Implement this
+        #self._swagger_ticket = self._swagger_tickets_api.getTicket(ticket_id, user_id)
 
         if self._swagger_ticket is not None:
             for attribute in self._swagger_ticket.swaggerTypes:
@@ -197,10 +242,10 @@ class SubtleData(object):
             self._use_cache = parent._use_cache
             self._api_client = parent._api_client
 
-    class _SDLocationCollection(_SDFirstClassCollection):
+    class SDLocationCollection(_SDFirstClassCollection):
 
         def __init__(self, parent):
-            super(SubtleData._SDLocationCollection, self).__init__(parent)
+            super(SubtleData.SDLocationCollection, self).__init__(parent)
 
         def create(self):
             pass
@@ -211,10 +256,10 @@ class SubtleData(object):
 
             return SDLocation(location_id, self._api_client, include_menu, use_cache)
 
-    class _SDUserCollection(_SDFirstClassCollection):
+    class SDUserCollection(_SDFirstClassCollection):
 
         def __init__(self, parent):
-            super(SubtleData._SDUserCollection, self).__init__(parent)
+            super(SubtleData.SDUserCollection, self).__init__(parent)
 
         def create(self):
             pass
@@ -231,10 +276,10 @@ class SubtleData(object):
 
             return SDUser(self._api_client, user_name=user_name, use_cache=use_cache)
 
-    class _SDTicketCollection(_SDFirstClassCollection):
+    class SDTicketCollection(_SDFirstClassCollection):
 
         def __init__(self, parent):
-            super(SubtleData._SDTicketCollection, self).__init__(parent)
+            super(SubtleData.SDTicketCollection, self).__init__(parent)
 
         def get(self, ticket_id, user_id=None):
             return SDTicket(self._api_client, ticket_id=ticket_id, user_id=user_id)
@@ -251,6 +296,6 @@ class SubtleData(object):
         self.api_key = api_key
         self._use_cache = use_cache
         self._api_client = swagger.ApiClient(api_key, config.SD_ENDPOINT)
-        self.Locations = SubtleData._SDLocationCollection(self)
-        self.Users = SubtleData._SDTicketCollection(self)
-        self.Tickets = SubtleData._SDTicketCollection(self)
+        self.Locations = SubtleData.SDLocationCollection(self)
+        self.Users = SubtleData.SDTicketCollection(self)
+        self.Tickets = SubtleData.SDTicketCollection(self)
