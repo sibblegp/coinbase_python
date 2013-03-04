@@ -23,7 +23,8 @@ class Table:
         self.swaggerTypes = {
             'pos_table_id': 'int',
             'subtledata_id': 'int',
-            'name': 'str'
+            'name': 'str',
+            'revenue_center_id': 'int'
 
         }
 
@@ -34,4 +35,6 @@ class Table:
         self.subtledata_id = None # int
         #Table Name
         self.name = None # str
+        #Revenue Center ID
+        self.revenue_center_id = None # int
         
