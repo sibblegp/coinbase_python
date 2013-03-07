@@ -1,6 +1,46 @@
+"""
+Subtledata Python Client Library
+
+AUTHOR
+
+George Sibble
+Chief Software Architect
+Subtledata, Inc.
+george.sibble@subtledata.com
+Github:  sibblegp
+
+
+************TO USE************
+
+LICENSE (The MIT License)
+
+Copyright (c) 2013 Subtledata, Inc. "code@subtledata.com"
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+"""
+
 __author__ = 'gsibble'
 
 import config
+import json
 
 from api import swagger
 
@@ -80,32 +120,38 @@ class SDLocation(SDFirstClassObject):
             self._api_key = parent._api_client.apiKey
             self._swagger_table = swagger_table
             self._location_id = parent.location_id
+            self._api_client = parent._api_client
             for attribute in self._swagger_table.swaggerTypes:
                 self.__setattr__(attribute, getattr(self._swagger_table, attribute))
 
-        def open_ticket(self, user_id, device_id, number_of_people_in_party=1, business_expense=False, return_ticket=True):
+        def open_ticket(self, user_id, device_id, number_of_people_in_party=1, business_expense=False, custom_ticket_name=None, return_ticket_details=False):
 
-            if hasattr(self, 'revenue_center') and hasattr(self, 'subtledata_id'):
+            if hasattr(self, 'revenue_center_id') and hasattr(self, 'subtledata_id'):
                 ticket_body = {
-                    "revenue_center_id": self.revenue_center,
+                    "revenue_center_id": self.revenue_center_id,
                     "number_of_people_in_party": number_of_people_in_party,
                     "user_id": user_id,
                     "device_id": device_id,
                     "table_id": self.subtledata_id,
-                    "business_expense": business_expense
+                    "business_expense": business_expense,
+                    "custom_ticket_name": custom_ticket_name
                 }
             else:
                 raise KeyError('Table missing key data')
 
+            print ticket_body
+
             #Send the request
             ticket_response = self._swagger_locations_api.createTicket(self._location_id, self._api_key, ticket_type='dine-in', body=ticket_body)
 
-            print ticket_response
+            print ticket_response.ticket_id
 
-            #If return_ticket
-            #Get the totals
+            if return_ticket_details:
+                #Get the totals
+                return SDTicket(self._api_client, ticket_response.ticket_id, user_id)
 
-            #Return an SDTicket
+            else:
+                return SDTicket(self._api_client, ticket_response.ticket_id, user_id)
 
 
     def __init__(self, location_id, api_client, include_menu, use_cache, *args, **kwargs):
@@ -183,22 +229,27 @@ class SDUser(SDFirstClassObject):
 
 
 class SDTicket(SDFirstClassObject):
-    def __init__(self, api_client, ticket_id, user_id=None, *args, **kwargs):
+    def __init__(self, api_client, ticket_id, user_id=None, get_values=True, *args, **kwargs):
         super(SDTicket, self).__init__(api_client, False)
 
-        #TODO:  Implement this
-        #self._swagger_ticket = self._swagger_tickets_api.getTicket(ticket_id, user_id)
+        self.ticket_id = ticket_id
+        self.user_id = user_id
 
-        if self._swagger_ticket is not None:
-            for attribute in self._swagger_ticket.swaggerTypes:
-                self.__setattr__(attribute, getattr(self._swagger_ticket, attribute))
+        if get_values == True:
+            pass
+            #TODO:  Implement this
+            # self._swagger_ticket = self._swagger_tickets_api.getTicket(ticket_id, user_id)
+            #
+            # if self._swagger_ticket is not None:
+            #     for attribute in self._swagger_ticket.swaggerTypes:
+            #         self.__setattr__(attribute, getattr(self._swagger_ticket, attribute))
 
-    def add_items_to_order(self, item_id, quantity, instructions=None, modifiers=None):
+    def add_item_to_order(self, item_id, quantity, instructions=None, modifiers=None):
 
         if hasattr(self, 'user_id') and hasattr(self, 'ticket_id'):
             if self.user_id is not None and self.ticket_id is not None:
                 post_body = {
-                    'item_id': item_id,
+                    'item_id': int(item_id),
                     'quantity': quantity,
 
                 }
@@ -209,12 +260,15 @@ class SDTicket(SDFirstClassObject):
                 if modifiers is not None:
                     post_body['modifiers'] = modifiers
 
+                print post_body
+
                 returned_status = self._swagger_tickets_api.addItemsToOrder(self.ticket_id, self.user_id, self._api_key,
-                                                                            post_body)
+                                                                            body=post_body)
 
                 return returned_status
 
             else:
+
                 raise E.NoUserSetOnTicket
         else:
             raise E.NoUserSetOnTicket
@@ -225,7 +279,7 @@ class SDTicket(SDFirstClassObject):
             if self.user_id is not None and self.ticket_id is not None:
 
                 returned_status = self._swagger_tickets_api.submitOrder(self.ticket_id, self.user_id, self._api_key,
-                                                                        body={})
+                                                                        body={'send': True})
 
                 return returned_status
             else:
@@ -287,15 +341,16 @@ class SubtleData(object):
         def get_with_pos_id(self, pos_id):
             pass
 
-    def __init__(self, api_key, use_cache=True):
-        """
-
-        :param api_key: Subtledata API Key
-        :param use_cache: Use Subtledata's Redis Caching layer to accelerate delivery of results.  This specific setting is global to all calls for this API object.
-        """
+    def __init__(self, api_key, use_cache=True, testing=False, internal_debug=True):
         self.api_key = api_key
         self._use_cache = use_cache
-        self._api_client = swagger.ApiClient(api_key, config.SD_ENDPOINT)
+        self._internal_debug = internal_debug
+
+        if not testing:
+            self._api_client = swagger.ApiClient(api_key, config.SD_ENDPOINT)
+        else:
+            self._api_client = swagger.ApiClient(api_key, config.SD_TESTING_ENDPOINT)
+
         self.Locations = SubtleData.SDLocationCollection(self)
         self.Users = SubtleData.SDTicketCollection(self)
         self.Tickets = SubtleData.SDTicketCollection(self)

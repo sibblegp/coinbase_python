@@ -10,7 +10,7 @@ setup(
     author_email='george.sibble@subtledata.com',
     description='Integration Library for the Subtledata Platform',
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
