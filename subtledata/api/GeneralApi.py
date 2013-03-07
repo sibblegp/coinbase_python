@@ -35,12 +35,11 @@ class GeneralApi(object):
         Args:
             api_key, str: Subtledata API Key (required)
             use_cache, bool: Utilize Cached Data (optional)
-            debug, bool: Internal Use Only (optional)
             
         Returns: State
         """
 
-        allParams = ['api_key', 'use_cache', 'debug']
+        allParams = ['api_key', 'use_cache']
 
         params = locals()
         for (key, val) in params['kwargs'].iteritems():
@@ -60,8 +59,6 @@ class GeneralApi(object):
             queryParams['api_key'] = self.apiClient.toPathValue(params['api_key'])
         if ('use_cache' in params):
             queryParams['use_cache'] = self.apiClient.toPathValue(params['use_cache'])
-        if ('debug' in params):
-            queryParams['debug'] = self.apiClient.toPathValue(params['debug'])
         postData = (params['body'] if 'body' in params else None)
 
         response = self.apiClient.callAPI(resourcePath, method, queryParams,

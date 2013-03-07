@@ -26,6 +26,6 @@ class SendTicket:
         }
 
 
-        #temporary
+        #Send the ticket in
         self.send = None # bool
         

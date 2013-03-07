@@ -36,26 +36,26 @@ class NewUser:
         }
 
 
-        #temporary
+        #
         self.first_name = None # str
-        #temporary
+        #
         self.last_name = None # str
-        #temporary
+        #
         self.middle_name = None # str
-        #temporary
+        #
         self.dob = None # str
-        #temporary
+        #
         self.email_address = None # str
-        #temporary
+        #
         self.longitude = None # float
-        #temporary
+        #
         self.cell_phone = None # str
-        #temporary
+        #
         self.latitude = None # float
-        #temporary
+        #
         self.password = None # str
-        #temporary
+        #
         self.user_name = None # str
-        #temporary
+        #
         self.device_id = None # str
         

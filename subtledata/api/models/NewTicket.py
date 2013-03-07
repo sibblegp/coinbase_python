@@ -21,23 +21,26 @@ class NewTicket:
 
     def __init__(self):
         self.swaggerTypes = {
-            'table_id': 'int',
-            'revenue_center_id': 'int',
             'user_id': 'int',
             'number_of_people_in_party': 'int',
+            'custom_ticket_name': 'str',
+            'table_id': 'int',
+            'revenue_center_id': 'int',
             'device_id': 'int'
 
         }
 
 
-        #temporary
-        self.table_id = None # int
-        #temporary
-        self.revenue_center_id = None # int
-        #temporary
+        #
         self.user_id = None # int
-        #temporary
+        #
         self.number_of_people_in_party = None # int
-        #temporary
+        #
+        self.custom_ticket_name = None # str
+        #
+        self.table_id = None # int
+        #
+        self.revenue_center_id = None # int
+        #
         self.device_id = None # int
         

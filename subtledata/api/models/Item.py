@@ -21,22 +21,34 @@ class Item:
 
     def __init__(self):
         self.swaggerTypes = {
-            'item_id': 'int',
+            'item_modifiers': 'list[ItemModifier]',
+            'name': 'str',
+            'available_for_order': 'bool',
+            'ticket_item_id': 'int',
             'price': 'float',
-            'description': 'str',
-            'item_images': 'list[ItemImage]',
-            'name': 'str'
+            'voided': 'bool',
+            'item_id': 'int',
+            'instructions': 'str',
+            'quantity': 'int'
 
         }
 
 
-        #Item ID
-        self.item_id = None # int
-        #Item Price
-        self.price = None # float
-        #Item Description
-        self.description = None # str
-        self.item_images = None # list[ItemImage]
+        self.item_modifiers = None # list[ItemModifier]
         #Item Name
         self.name = None # str
+        #Item still available to order
+        self.available_for_order = None # bool
+        #Ticket Item ID (This is specific to the ticket)
+        self.ticket_item_id = None # int
+        #Item Price
+        self.price = None # float
+        #Item is voided
+        self.voided = None # bool
+        #Item ID (This is specific to the item across tickets)
+        self.item_id = None # int
+        #Special Instructions
+        self.instructions = None # str
+        #Quantity of item
+        self.quantity = None # int
         

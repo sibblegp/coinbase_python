@@ -29,9 +29,9 @@ class Table:
         }
 
 
-        #Table ID
-        self.pos_table_id = None # int
         #Table Identifier
+        self.pos_table_id = None # int
+        #Table ID
         self.subtledata_id = None # int
         #Table Name
         self.name = None # str

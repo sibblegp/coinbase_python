@@ -29,6 +29,106 @@ class TicketsApi(object):
       self.apiClient = apiClient
 
     
+    def getTicket(self, ticket_id, api_key, location_id, **kwargs):
+        """Get a ticket by ID
+
+        Args:
+            ticket_id, int: Subtledata Ticket ID (required)
+            api_key, str: Subtledata API Key (required)
+            location_id, int:  (required)
+            user_id, int:  (optional)
+            
+        Returns: Ticket
+        """
+
+        allParams = ['ticket_id', 'api_key', 'location_id', 'user_id']
+
+        params = locals()
+        for (key, val) in params['kwargs'].iteritems():
+            if key not in allParams:
+                raise TypeError("Got an unexpected keyword argument '%s' to method getTicket" % key)
+            params[key] = val
+        del params['kwargs']
+
+        resourcePath = '/tickets/{ticket_id}'
+        resourcePath = resourcePath.replace('{format}', 'json')
+        method = 'GET'
+
+        queryParams = {}
+        headerParams = {}
+
+        if ('api_key' in params):
+            queryParams['api_key'] = self.apiClient.toPathValue(params['api_key'])
+        if ('location_id' in params):
+            queryParams['location_id'] = self.apiClient.toPathValue(params['location_id'])
+        if ('user_id' in params):
+            queryParams['user_id'] = self.apiClient.toPathValue(params['user_id'])
+        if ('ticket_id' in params):
+            replacement = str(self.apiClient.toPathValue(params['ticket_id']))
+            resourcePath = resourcePath.replace('{' + 'ticket_id' + '}',
+                                                replacement)
+        postData = (params['body'] if 'body' in params else None)
+
+        response = self.apiClient.callAPI(resourcePath, method, queryParams,
+                                          postData, headerParams)
+
+        if not response:
+            return None
+
+        responseObject = self.apiClient.deserialize(response, 'Ticket')
+        return responseObject
+        
+        
+    def voidTicket(self, ticket_id, api_key, location_id, **kwargs):
+        """Void a ticket
+
+        Args:
+            ticket_id, int: Subtledata Ticket ID (required)
+            api_key, str: Subtledata API Key (required)
+            location_id, int:  (required)
+            user_id, int:  (optional)
+            
+        Returns: Status
+        """
+
+        allParams = ['ticket_id', 'api_key', 'location_id', 'user_id']
+
+        params = locals()
+        for (key, val) in params['kwargs'].iteritems():
+            if key not in allParams:
+                raise TypeError("Got an unexpected keyword argument '%s' to method voidTicket" % key)
+            params[key] = val
+        del params['kwargs']
+
+        resourcePath = '/tickets/{ticket_id}'
+        resourcePath = resourcePath.replace('{format}', 'json')
+        method = 'DELETE'
+
+        queryParams = {}
+        headerParams = {}
+
+        if ('api_key' in params):
+            queryParams['api_key'] = self.apiClient.toPathValue(params['api_key'])
+        if ('location_id' in params):
+            queryParams['location_id'] = self.apiClient.toPathValue(params['location_id'])
+        if ('user_id' in params):
+            queryParams['user_id'] = self.apiClient.toPathValue(params['user_id'])
+        if ('ticket_id' in params):
+            replacement = str(self.apiClient.toPathValue(params['ticket_id']))
+            resourcePath = resourcePath.replace('{' + 'ticket_id' + '}',
+                                                replacement)
+        postData = (params['body'] if 'body' in params else None)
+
+        response = self.apiClient.callAPI(resourcePath, method, queryParams,
+                                          postData, headerParams)
+
+        if not response:
+            return None
+
+        responseObject = self.apiClient.deserialize(response, 'Status')
+        return responseObject
+        
+        
     def submitOrder(self, ticket_id, user_id, api_key, body, **kwargs):
         """Order the currently staged items
 
@@ -36,13 +136,12 @@ class TicketsApi(object):
             ticket_id, int: Subtledata Ticket ID (required)
             user_id, int: Subtledata Ticket ID (required)
             api_key, str: Subtledata API Key (required)
-            debug, bool: Internal Use Only (optional)
             body, SendTicket: Send the ticket (required)
             
         Returns: OrderResults
         """
 
-        allParams = ['ticket_id', 'user_id', 'api_key', 'debug', 'body']
+        allParams = ['ticket_id', 'user_id', 'api_key', 'body']
 
         params = locals()
         for (key, val) in params['kwargs'].iteritems():
@@ -60,8 +159,6 @@ class TicketsApi(object):
 
         if ('api_key' in params):
             queryParams['api_key'] = self.apiClient.toPathValue(params['api_key'])
-        if ('debug' in params):
-            queryParams['debug'] = self.apiClient.toPathValue(params['debug'])
         if ('ticket_id' in params):
             replacement = str(self.apiClient.toPathValue(params['ticket_id']))
             resourcePath = resourcePath.replace('{' + 'ticket_id' + '}',
@@ -89,13 +186,12 @@ class TicketsApi(object):
             ticket_id, int: Subtledata Ticket ID (required)
             user_id, int: Subtledata Ticket ID (required)
             api_key, str: Subtledata API Key (required)
-            debug, bool: Internal Use Only (optional)
             body, ItemToAdd: The Item object to Add (required)
             
         Returns: Status
         """
 
-        allParams = ['ticket_id', 'user_id', 'api_key', 'debug', 'body']
+        allParams = ['ticket_id', 'user_id', 'api_key', 'body']
 
         params = locals()
         for (key, val) in params['kwargs'].iteritems():
@@ -113,8 +209,6 @@ class TicketsApi(object):
 
         if ('api_key' in params):
             queryParams['api_key'] = self.apiClient.toPathValue(params['api_key'])
-        if ('debug' in params):
-            queryParams['debug'] = self.apiClient.toPathValue(params['debug'])
         if ('ticket_id' in params):
             replacement = str(self.apiClient.toPathValue(params['ticket_id']))
             resourcePath = resourcePath.replace('{' + 'ticket_id' + '}',

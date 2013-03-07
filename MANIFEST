@@ -3,6 +3,7 @@ README.txt
 setup.py
 subtledata/__init__.py
 subtledata/config.py
+subtledata/exceptions.py
 subtledata/api/GeneralApi.py
 subtledata/api/LocationsApi.py
 subtledata/api/TicketsApi.py
