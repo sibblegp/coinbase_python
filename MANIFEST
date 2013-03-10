@@ -14,6 +14,7 @@ subtledata/api/models/Category.py
 subtledata/api/models/CategoryImage.py
 subtledata/api/models/Item.py
 subtledata/api/models/ItemImage.py
+subtledata/api/models/ItemModifier.py
 subtledata/api/models/ItemToAdd.py
 subtledata/api/models/Location.py
 subtledata/api/models/NewTicket.py
@@ -25,6 +26,7 @@ subtledata/api/models/State.py
 subtledata/api/models/Status.py
 subtledata/api/models/Table.py
 subtledata/api/models/Terminal.py
+subtledata/api/models/Ticket.py
 subtledata/api/models/TicketStatus.py
 subtledata/api/models/User.py
 subtledata/api/models/__init__.py
