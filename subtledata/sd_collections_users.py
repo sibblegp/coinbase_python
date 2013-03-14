@@ -9,8 +9,11 @@ class SDUserCollection(SDFirstClassCollection):
     def __init__(self, parent):
         super(SDUserCollection, self).__init__(parent)
 
-    def create(self):
-        pass
+    @property
+    def all(self):
+
+        return []
+
 
     def get(self, user_id, use_cache=True):
         if not self._use_cache:
@@ -18,8 +21,9 @@ class SDUserCollection(SDFirstClassCollection):
 
         return SDUser(self, user_id=user_id, use_cache=use_cache)
 
-    def get_with_name(self, user_name, use_cache=True):
-        if not self._use_cache:
-            use_cache = False
+    def filter(self, first_name=None):
 
-        return SDUser(self, user_name=user_name, use_cache=use_cache)
+        return []
+
+    def create(self, first_name):
+        pass

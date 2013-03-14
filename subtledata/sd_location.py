@@ -40,6 +40,10 @@ class SDLocation(SDFirstClassObject):
 
         return SDMenu(self, self._swagger_menu)
 
+    @property
+    def open_tables(self):
+        return []
+
     def open_ticket_for_dine_in(self, user_id, device_id, table_id, business_expense=False):
         new_ticket_body = {
 
