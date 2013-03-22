@@ -3,6 +3,7 @@ __author__ = 'gsibble'
 from flask import Flask, render_template, request, make_response
 
 from oauth2client.client import OAuth2WebServerFlow
+import httplib2
 
 APP = Flask(__name__)
 APP.debug = True
@@ -23,7 +24,9 @@ def receive_token():
 
     oauth_code = request.args['code']
 
-    token = coinbase_client.step2_exchange(oauth_code)
+    http = httplib2.Http(disable_ssl_certificate_validation=True)
+
+    token = coinbase_client.step2_exchange(oauth_code, http)
 
     return make_response(token.to_json())
 
