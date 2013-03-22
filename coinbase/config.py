@@ -1,3 +1,3 @@
 __author__ = 'gsibble'
 
-COINBASE_ENDPOINT = 'https://api.subtledata.com/v1'
+COINBASE_ENDPOINT = 'https://coinbase.com/api/v1'
