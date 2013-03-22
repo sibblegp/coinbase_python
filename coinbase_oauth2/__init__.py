@@ -29,7 +29,7 @@ def receive_token():
 
     print oauth_code
 
-    http = httplib2.Http(disable_ssl_certificate_validation=True)
+    http = httplib2.Http(ca_certs='ca_certs.txt')
 
     token = coinbase_client.step2_exchange(oauth_code, http=http)
 
