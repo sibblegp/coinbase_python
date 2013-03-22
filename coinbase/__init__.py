@@ -53,7 +53,7 @@ class CoinBaseAccount(object):
     def __init__(self, oauth_credentials_json):
 
         self.oauth_credentials = OAuth2Credentials.from_json(oauth_credentials_json)
-        self.http = httplib2.Http(ca_certs='ca_certs.txt')
+        self.http = httplib2.Http(ca_certs='/etc/ssl/certs/ca-certificates.crt')
 
         if self.oauth_credentials.access_token_expired == True:
             print "Access_token expired"
