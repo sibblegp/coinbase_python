@@ -3,6 +3,7 @@ __author__ = 'gsibble'
 import sure
 from sure import it, this, those, these
 import unittest
+from httpretty import HTTPretty, httprettified
 
 from coinbase import CoinBaseAccount
 from models import CoinBaseAmount
@@ -14,7 +15,13 @@ class CoinBaseTests(unittest.TestCase):
     def setUp(self):
         self.account = CoinBaseAccount(TEMP_CREDENTIALS)
 
+    @httprettified
     def test_retrieve_balance(self):
+
+        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/account/balance",
+                               body='''{"amount":"0.00000000","currency":"BTC"}''',
+                               content_type='text/json')
+
         this(self.account.balance).should.equal(0.0)
         this(self.account.balance.currency).should.equal('BTC')
 
@@ -22,7 +29,13 @@ class CoinBaseTests(unittest.TestCase):
         #this(self.account.balance).should.equal(CoinBaseAmount('0.00000000', 'USD'))
         #this(self.account.balance.currency).should.equal(CoinBaseAmount('0.00000000', 'USD').currency)
 
+    @httprettified
     def test_receive_addresses(self):
+
+        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/account/receive_address",
+                               body='''{"address" : "1DX9ECEF3FbGUtzzoQhDT8CG3nLUEA2FJt"}''',
+                               content_type='text/json')
+
         this(self.account.receive_address).should.equal(u'1DX9ECEF3FbGUtzzoQhDT8CG3nLUEA2FJt')
 
     def test_contacts(self):
