@@ -9,12 +9,12 @@ APP.debug = True
 
 from secrets import CALLBACK_URL, CLIENT_ID, CLIENT_SECRET
 
-coinbase_client = OAuth2WebServerFlow(CLIENT_ID, 'all', 'all', 'https://www.paywithair.com/consumer_auth', auth_uri='https://www.coinbase.com/oauth/authorize', token_uri='https://www.coinbase.com/oauth/token')
+coinbase_client = OAuth2WebServerFlow(CLIENT_ID, 'all', 'all', 'http://www.paywithair.com/consumer_auth', auth_uri='https://www.coinbase.com/oauth/authorize', token_uri='https://www.coinbase.com/oauth/token')
 
 @APP.route('/')
 def register_me():
 
-    auth_url = coinbase_client.step1_get_authorize_url('https://www.paywithair.com/consumer_auth')
+    auth_url = coinbase_client.step1_get_authorize_url('http://www.paywithair.com/consumer_auth')
 
     return render_template('register.jinja2', auth_url=auth_url)
 
