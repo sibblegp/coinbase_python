@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='coinbase',
     version='0.0.1',
-    packages=['coinbase'],
+    packages=['coinbase', 'coinbase.models'],
     url='http://www.paywithair.com/libraries',
     license='MIT',
     author='George Sibble',
@@ -21,4 +21,10 @@ setup(
         'Programming Language :: Python',
         'Topic :: Software Development :: Libraries :: Python Modules'
         ],
+    install_requires=[
+        'Flask>=0.9',
+        'httplib2>=0.8',
+        'requests>=1.1.0',
+        'oauth2client>=1.1'
+        ]
 )
