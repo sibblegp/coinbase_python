@@ -1,30 +1,5 @@
 __author__ = 'gsibble'
 
-EXAMPLE_RESOINSE = '''{
-  "success": true,
-  "transaction": {
-    "id": "501a3554f8182b2754000003",
-    "created_at": "2012-08-02T01:07:48-07:00",
-    "notes": "Sample request for you!",
-    "amount": {
-      "amount": "1.23400000",
-      "currency": "BTC"
-    },
-    "request": true,
-    "status": "pending",
-    "sender": {
-      "id": "5011f33df8182b142400000a",
-      "name": "User One",
-      "email": "user1@example.com"
-    },
-    "recipient": {
-      "id": "5011f33df8182b142400000e",
-      "name": "User Two",
-      "email": "user2@example.com"
-    }
-  }
-}'''
-
 from amount import CoinBaseAmount
 from contact import CoinBaseContact
 
@@ -46,11 +21,10 @@ class CoinBaseTransaction(object):
 
 
         #Sender Information
-
         if 'sender' in transaction:
-            sender_id = transaction['sender']['id']
-            sender_name = transaction['sender']['name']
-            sender_email = transaction['sender']['email']
+            sender_id = transaction['sender'].get('id', None)
+            sender_name = transaction['sender'].get('name', None)
+            sender_email = transaction['sender'].get('email', None)
 
             self.sender = CoinBaseContact(contact_id=sender_id,
                                           name=sender_name,
@@ -61,11 +35,10 @@ class CoinBaseTransaction(object):
             pass
 
         #Recipient Info
-
         if 'recipient' in transaction:
-            recipient_id = transaction['recipient']['id']
-            recipient_name = transaction['recipient']['name']
-            recipient_email = transaction['recipient']['email']
+            recipient_id = transaction['recipient'].get('id', None)
+            recipient_name = transaction['recipient'].get('name', None)
+            recipient_email = transaction['recipient'].get('email', None)
 
             self.recipient = CoinBaseContact(contact_id=recipient_id,
                                           name=recipient_name,
@@ -90,7 +63,7 @@ class CoinBaseTransaction(object):
         pass
         #TODO:  Approve the transaction if possible
 
-    def resent(self):
+    def resend(self):
         pass
-        #TODO:  Resent the transaction email if possible
+        #TODO:  Resend the transaction email if possible
 
