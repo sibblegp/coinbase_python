@@ -60,7 +60,7 @@ Contributions are greatly appreciated.  Please make all requests using built in 
 
 (The MIT License)
 
-Copyright (c) 2012 Dwolla &lt;michael@dwolla.com&gt;
+Copyright (c) 2013 George Sibble &lt;gsibble@gmail.com&gt;
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
