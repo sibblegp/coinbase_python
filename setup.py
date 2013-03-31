@@ -2,15 +2,15 @@ from distutils.core import setup
 
 setup(
     name='coinbase',
-    version='0.0.1',
+    version='0.1.0',
     packages=['coinbase', 'coinbase.models'],
-    url='http://www.paywithair.com/libraries',
+    url='https://github.com/sibblegp/coinbase_python',
     license='MIT',
     author='George Sibble',
     author_email='george.sibble@gmail.com',
     description='Integration Library for the Coinbase API',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
