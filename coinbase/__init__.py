@@ -6,9 +6,6 @@ AUTHOR
 George Sibble
 Github:  sibblegp
 
-
-************TO USE************
-
 LICENSE (The MIT License)
 
 Copyright (c) 2013 George Sibble "gsibble@gmail.com"
@@ -36,7 +33,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 __author__ = 'gsibble'
 
-from oauth2client.client import AccessTokenRefreshError, OAuth2Credentials
+from oauth2client.client import AccessTokenRefreshError, OAuth2Credentials, AccessTokenCredentialsError
 
 import requests
 import httplib2
@@ -45,48 +42,82 @@ import json
 #TODO: Switch to decimals from floats
 #from decimal import Decimal
 
-from config import COINBASE_ENDPOINT
-from models import CoinBaseAmount, CoinBaseTransaction
+from coinbase.config import COINBASE_ENDPOINT
+from coinbase.models import CoinBaseAmount, CoinBaseTransaction
 
-class CoinBaseAccount(object):
-    def __init__(self, api_key=None, oauth2_credentials=None):
+
+class CoinbaseAccount(object):
+    """
+    Primary object for interacting with a Coinbase account
+
+    You may either use oauth credentials or a classic API key
+    """
+
+    def __init__(self,
+                 oauth2_credentials=None,
+                 api_key=None):
+        """
+
+        :param oauth2_credentials: JSON representation of Coinbase oauth2 credentials
+        :param api_key:  Coinbase API key
+        """
+
+        #Set up our requests session
+        self.session = requests.session()
+
+        #Set our Content-Type
+        self.session.headers.update({'content-type': 'application/json'})
 
         if oauth2_credentials:
 
-            #Set our credentials
-            self.oauth2_credentials = oauth2_credentials
+            #Set CA certificates (breaks without them)
+            self.http = httplib2.Http(ca_certs='ca-certs.txt')
 
-            #Check our token and refresh if necessary
+            #Create our credentials from the JSON sent
+            self.oauth2_credentials = OAuth2Credentials.from_json(oauth2_credentials)
+
+            #Check our token
             self._check_oauth_expired()
-
-            #Set up our session
-            self.session = requests.session()
 
             #Apply our oAuth credentials to the session
             self.oauth2_credentials.apply(headers=self.session.headers)
 
-            #Set our Content-Type
-            self.session.headers.update({'content-type': 'application/json'})
+            #Set our request parameters to be empty
+            self.global_request_params = {}
 
         elif api_key:
-            if api_key is type(str):
-                #TODO:  Implement api_key version
-                pass
-            elif api_key is type(OAuth2Credentials):
-                print "Please pass oAuth credentials into the oauth2_credentials parameter, not api_key"
+            if type(api_key) is str:
+
+                #Set our API Key
+                self.api_key = api_key
+
+                #Set our global_request_params
+                self.global_request_params = {'api_key':api_key}
             else:
                 print "Your api_key must be a string"
         else:
             print "You must pass either an api_key or oauth_credentials"
 
     def _check_oauth_expired(self):
-        if self.oauth2_credentials.access_token_expired == True:
-            print 'oAuth2 Token Expired'
-            self._refresh_oauth()
+        """
+        Internal function to check if the oauth2 credentials are expired
+        """
 
-    def _refresh_oauth(self):
-        #Set CA certificates (breaks without them)
-        self.http = httplib2.Http(ca_certs='/etc/ssl/certs/ca-certificates.crt')
+        #Check if they are expired
+        if self.oauth2_credentials.access_token_expired == True:
+
+            #Print an notification message if they are
+            print 'oAuth2 Token Expired'
+
+            #Raise the appropriate error
+            raise AccessTokenCredentialsError
+
+    def refresh_oauth(self):
+        """
+        Refresh our oauth2 token
+        :return: JSON representation of oauth token
+        :raise: AccessTokenRefreshError if there was an error refreshing the token
+        """
 
         #See if we can refresh the token
         try:
@@ -96,55 +127,102 @@ class CoinBaseAccount(object):
             #We were successful
             print 'Your token was refreshed with the following response...'
 
-            #Print the token for copy/paste
-            print self.oauth2_credentials.to_json()
+            #Return the token for storage
+            return self.oauth2_credentials.to_json()
 
         #If the refresh token was invalid
         except AccessTokenRefreshError:
 
+            #Print a warning
             print 'Your refresh token is invalid'
+
+            #Raise the appropriate error
             raise AccessTokenRefreshError
+
+    def _prepare_request(self):
+        """
+        Prepare our request in various ways
+        """
+
+        #Check if the oauth token is expired and refresh it if necessary
+        self._check_oauth_expired()
 
     @property
     def balance(self):
+        """
+        Retrieve coinbase's account balance
+
+        :return: CoinBaseAmount (float) with currency attribute
+        """
+
         url = COINBASE_ENDPOINT + '/account/balance'
-        response = self.session.get(url)
+        response = self.session.get(url, params=self.global_request_params)
         results = response.json()
         return CoinBaseAmount(results['amount'], results['currency'])
 
     @property
     def receive_address(self):
+        """
+        Get the account's current receive address
+
+        :return: String address of account
+        """
         url = COINBASE_ENDPOINT + '/account/receive_address'
-        response = self.session.get(url)
+        response = self.session.get(url, params=self.global_request_params)
         return response.json()['address']
 
     @property
     def contacts(self):
+        """
+        Get the account's contacts
+
+        :return: List of contacts in the account
+        """
         url = COINBASE_ENDPOINT + '/contacts'
-        response = self.session.get(url)
+        response = self.session.get(url, params=self.global_request_params)
         return [contact['contact'] for contact in response.json()['contacts']]
 
     def buy_price(self, qty=1):
+        """
+        Return the buy price of BitCoin in USD
+        :param qty: Quantity of BitCoin to price
+        :return: CoinBaseAmount (float) with currency attribute
+        """
         url = COINBASE_ENDPOINT + '/prices/buy'
         params = {'qty': qty}
+        params.update(self.global_request_params)
         response = self.session.get(url, params=params)
         results = response.json()
         return CoinBaseAmount(results['amount'], results['currency'])
 
     def sell_price(self, qty=1):
+        """
+        Return the sell price of BitCoin in USD
+        :param qty: Quantity of BitCoin to price
+        :return: CoinBaseAmount (float) with currency attribute
+        """
         url = COINBASE_ENDPOINT + '/prices/sell'
         params = {'qty': qty}
+        params.update(self.global_request_params)
         response = self.session.get(url, params=params)
         results = response.json()
         return CoinBaseAmount(results['amount'], results['currency'])
 
-    @property
-    def user(self):
-        url = COINBASE_ENDPOINT + '/account/receive_address'
-        response = self.session.get(url)
-        return response.json()
+    # @property
+    # def user(self):
+    #     url = COINBASE_ENDPOINT + '/account/receive_address'
+    #     response = self.session.get(url)
+    #     return response.json()
 
     def request(self, from_email, amount, notes='', currency='BTC'):
+        """
+        Request BitCoin from an email address to be delivered to this account
+        :param from_email: Email from which to request BTC
+        :param amount: Amount to request in assigned currency
+        :param notes: Notes to include with the request
+        :param currency: Currency of the request
+        :return: CoinBaseTransaction with status and details
+        """
         url = COINBASE_ENDPOINT + '/transactions/request_money'
 
         if currency == 'BTC':
@@ -165,7 +243,7 @@ class CoinBaseAccount(object):
                 }
             }
 
-        response = self.session.post(url=url, data=json.dumps(request_data))
+        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
         response_parsed = response.json()
         if response_parsed['success'] == False:
             pass
@@ -174,6 +252,14 @@ class CoinBaseAccount(object):
         return CoinBaseTransaction(response_parsed['transaction'])
 
     def send(self, to_address, amount, notes='', currency='BTC'):
+        """
+        Send BitCoin from this account to either an email address or a BTC address
+        :param to_address: Email or BTC address to where coin should be sent
+        :param amount: Amount of currency to send
+        :param notes: Notes to be included with transaction
+        :param currency: Currency to send
+        :return: CoinBaseTransaction with status and details
+        """
         url = COINBASE_ENDPOINT + '/transactions/send_money'
 
         if currency == 'BTC':
@@ -195,16 +281,22 @@ class CoinBaseAccount(object):
                 }
             }
 
-        response = self.session.post(url=url, data=json.dumps(request_data))
+        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
         response_parsed = response.json()
+
         if response_parsed['success'] == False:
             pass
-            #DO ERROR HANDLING and raise something
+            #TODO:  DO ERROR HANDLING and raise something
 
         return CoinBaseTransaction(response_parsed['transaction'])
 
 
     def transactions(self, count=30):
+        """
+        Retrieve the list of transactions for the current account
+        :param count: How many transactions to retrieve
+        :return: List of CoinBaseTransaction objects
+        """
         url = COINBASE_ENDPOINT + '/transactions'
         pages = count / 30 + 1
         transactions = []
@@ -215,6 +307,7 @@ class CoinBaseAccount(object):
 
             if not reached_final_page:
                 params = {'page': page}
+                params.update(self.global_request_params)
                 response = self.session.get(url=url, params=params)
                 parsed_transactions = response.json()
 
@@ -227,15 +320,22 @@ class CoinBaseAccount(object):
         return transactions
 
     def get_transaction(self, transaction_id):
+        """
+        Retrieve a transaction's details
+        :param transaction_id: Unique transaction identifier
+        :return: CoinBaseTransaction object with transaction details
+        """
         url = COINBASE_ENDPOINT + '/transactions/' + str(transaction_id)
-        response = self.session.get(url)
+        response = self.session.get(url, params=self.global_request_params)
         results = response.json()
+
+        if results.get('success', True) == False:
+            pass
+            #TODO:  Add error handling
+
         return CoinBaseTransaction(results['transaction'])
 
-#Models to create
-###Transaction
-###Sale
-###User
-###Contact
-###Receive address?
-###Amount with currency
+        #Models to create
+        ###Sale
+        ###User
+        ###Receive address?
