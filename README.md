@@ -38,6 +38,8 @@ This repo includes an example.py file which demonstrates:
 * Getting the buy/sell price of BitCoin at CoinBase
 * Listing historical transactions
 
+It also includes a small webserver in the coinbase_oauth2 module which demonstrates how to obtain an oauth2 token.
+
 ## Methods
 
 More documentation coming soon.
@@ -50,7 +52,7 @@ More documentation coming soon.
 
 ## Contributing
 
-Contributions are greatly appreciated.  Please make all requests using built in issue tracking at GitHub
+Contributions are greatly appreciated.  Please make all requests using built in issue tracking at GitHub.
 
 ## Credits
 
