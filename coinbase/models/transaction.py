@@ -1,9 +1,9 @@
 __author__ = 'gsibble'
 
-from amount import CoinBaseAmount
-from contact import CoinBaseContact
+from amount import CoinbaseAmount
+from contact import CoinbaseContact
 
-class CoinBaseTransaction(object):
+class CoinbaseTransaction(object):
 
     def __init__(self, transaction):
 
@@ -14,7 +14,7 @@ class CoinBaseTransaction(object):
         transaction_amount = transaction['amount']['amount']
         transaction_currency = transaction['amount']['currency']
 
-        self.amount = CoinBaseAmount(transaction_amount, transaction_currency)
+        self.amount = CoinbaseAmount(transaction_amount, transaction_currency)
 
         self.status = transaction['status']
         self.request = transaction['request']
@@ -26,7 +26,7 @@ class CoinBaseTransaction(object):
             sender_name = transaction['sender'].get('name', None)
             sender_email = transaction['sender'].get('email', None)
 
-            self.sender = CoinBaseContact(contact_id=sender_id,
+            self.sender = CoinbaseContact(contact_id=sender_id,
                                           name=sender_name,
                                           email=sender_email)
 
@@ -40,7 +40,7 @@ class CoinBaseTransaction(object):
             recipient_name = transaction['recipient'].get('name', None)
             recipient_email = transaction['recipient'].get('email', None)
 
-            self.recipient = CoinBaseContact(contact_id=recipient_id,
+            self.recipient = CoinbaseContact(contact_id=recipient_id,
                                           name=recipient_name,
                                           email=recipient_email)
             self.recipient_address = None

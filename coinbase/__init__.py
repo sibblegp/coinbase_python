@@ -43,7 +43,7 @@ import json
 #from decimal import Decimal
 
 from coinbase.config import COINBASE_ENDPOINT
-from coinbase.models import CoinBaseAmount, CoinBaseTransaction
+from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser
 
 
 class CoinbaseAccount(object):
@@ -152,13 +152,13 @@ class CoinbaseAccount(object):
         """
         Retrieve coinbase's account balance
 
-        :return: CoinBaseAmount (float) with currency attribute
+        :return: CoinbaseAmount (float) with currency attribute
         """
 
         url = COINBASE_ENDPOINT + '/account/balance'
         response = self.session.get(url, params=self.global_request_params)
         results = response.json()
-        return CoinBaseAmount(results['amount'], results['currency'])
+        return CoinbaseAmount(results['amount'], results['currency'])
 
     @property
     def receive_address(self):
@@ -186,27 +186,27 @@ class CoinbaseAccount(object):
         """
         Return the buy price of BitCoin in USD
         :param qty: Quantity of BitCoin to price
-        :return: CoinBaseAmount (float) with currency attribute
+        :return: CoinbaseAmount (float) with currency attribute
         """
         url = COINBASE_ENDPOINT + '/prices/buy'
         params = {'qty': qty}
         params.update(self.global_request_params)
         response = self.session.get(url, params=params)
         results = response.json()
-        return CoinBaseAmount(results['amount'], results['currency'])
+        return CoinbaseAmount(results['amount'], results['currency'])
 
     def sell_price(self, qty=1):
         """
         Return the sell price of BitCoin in USD
         :param qty: Quantity of BitCoin to price
-        :return: CoinBaseAmount (float) with currency attribute
+        :return: CoinbaseAmount (float) with currency attribute
         """
         url = COINBASE_ENDPOINT + '/prices/sell'
         params = {'qty': qty}
         params.update(self.global_request_params)
         response = self.session.get(url, params=params)
         results = response.json()
-        return CoinBaseAmount(results['amount'], results['currency'])
+        return CoinbaseAmount(results['amount'], results['currency'])
 
     # @property
     # def user(self):
@@ -221,7 +221,7 @@ class CoinbaseAccount(object):
         :param amount: Amount to request in assigned currency
         :param notes: Notes to include with the request
         :param currency: Currency of the request
-        :return: CoinBaseTransaction with status and details
+        :return: CoinbaseTransaction with status and details
         """
         url = COINBASE_ENDPOINT + '/transactions/request_money'
 
@@ -249,7 +249,7 @@ class CoinbaseAccount(object):
             pass
             #DO ERROR HANDLING and raise something
 
-        return CoinBaseTransaction(response_parsed['transaction'])
+        return CoinbaseTransaction(response_parsed['transaction'])
 
     def send(self, to_address, amount, notes='', currency='BTC'):
         """
@@ -258,7 +258,7 @@ class CoinbaseAccount(object):
         :param amount: Amount of currency to send
         :param notes: Notes to be included with transaction
         :param currency: Currency to send
-        :return: CoinBaseTransaction with status and details
+        :return: CoinbaseTransaction with status and details
         """
         url = COINBASE_ENDPOINT + '/transactions/send_money'
 
@@ -288,14 +288,14 @@ class CoinbaseAccount(object):
             pass
             #TODO:  DO ERROR HANDLING and raise something
 
-        return CoinBaseTransaction(response_parsed['transaction'])
+        return CoinbaseTransaction(response_parsed['transaction'])
 
 
     def transactions(self, count=30):
         """
         Retrieve the list of transactions for the current account
         :param count: How many transactions to retrieve
-        :return: List of CoinBaseTransaction objects
+        :return: List of CoinbaseTransaction objects
         """
         url = COINBASE_ENDPOINT + '/transactions'
         pages = count / 30 + 1
@@ -315,7 +315,7 @@ class CoinbaseAccount(object):
                     reached_final_page = True
 
                 for transaction in parsed_transactions['transactions']:
-                    transactions.append(CoinBaseTransaction(transaction['transaction']))
+                    transactions.append(CoinbaseTransaction(transaction['transaction']))
 
         return transactions
 
@@ -323,7 +323,7 @@ class CoinbaseAccount(object):
         """
         Retrieve a transaction's details
         :param transaction_id: Unique transaction identifier
-        :return: CoinBaseTransaction object with transaction details
+        :return: CoinbaseTransaction object with transaction details
         """
         url = COINBASE_ENDPOINT + '/transactions/' + str(transaction_id)
         response = self.session.get(url, params=self.global_request_params)
@@ -333,9 +333,38 @@ class CoinbaseAccount(object):
             pass
             #TODO:  Add error handling
 
-        return CoinBaseTransaction(results['transaction'])
+        return CoinbaseTransaction(results['transaction'])
+
+    def get_user_details(self):
+        """
+        Retrieve the current user's details
+
+        :return: CoinbaseUser object with user details
+        """
+        url = COINBASE_ENDPOINT + '/users'
+        response = self.session.get(url, params=self.global_request_params)
+        results = response.json()
+
+        user_details = results['users'][0]
+
+        #Convert our balance and limits to proper amounts
+        balance = CoinbaseAmount(user_details['balance']['amount'], user_details['balance']['currency'])
+        buy_limit = CoinbaseAmount(user_details['buy_limit']['amount'], user_details['buy_limit']['currency'])
+        sell_limit = CoinbaseAmount(user_details['sell_limit']['amount'], user_details['sell_limit']['currency'])
+
+        user = CoinbaseUser(user_id=user_details['user_id'],
+                            name=user_details['name'],
+                            email=user_details['email'],
+                            time_zone=user_details['time_zone'],
+                            native_currency=user_details['native_currency'],
+                            balance=balance,
+                            buy_level=user_details['buy_level'],
+                            sell_level=user_details['sell_level'],
+                            buy_limit=buy_limit,
+                            sell_limit=sell_limit)
+
+        return user
 
         #Models to create
         ###Sale
-        ###User
         ###Receive address?
