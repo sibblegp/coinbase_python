@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='coinbase',
-    version='0.1.0',
+    version='0.1.0-2',
     packages=['coinbase', 'coinbase.models'],
     url='https://github.com/sibblegp/coinbase_python',
     license='MIT',
@@ -22,7 +22,6 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules'
         ],
     install_requires=[
-        'Flask>=0.9',
         'httplib2>=0.8',
         'requests>=1.1.0',
         'oauth2client>=1.1'

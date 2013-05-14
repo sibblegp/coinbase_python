@@ -367,4 +367,25 @@ class CoinbaseAccount(object):
 
         #Models to create
         ###Sale
+<<<<<<< HEAD
         ###Receive address?
+=======
+        ###User
+        ###Receive address?
+
+    def generate_receive_address(self, callback_url=None):
+        """
+        Generate a new receive address
+        :param callback_url: The URL to receive instant payment notifications
+        :return: The new string address
+        """
+        url = COINBASE_ENDPOINT + '/account/generate_receive_address'
+        request_data = {
+            "address": {
+                "callback_url": callback_url
+            }
+        }
+        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        return response.json()['address']
+
+>>>>>>> 8c953095bd5d6a757ee499d62396a87f4300fa26
