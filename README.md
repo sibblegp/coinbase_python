@@ -5,7 +5,7 @@ Python Library for the Coinbase API for use with three legged oAuth2 and classic
 
 ## Version
 
-0.1.0-2
+0.1.0-3
 
 ## Requirements
 - [Coinbase Account](http://www.coinbase.com)
@@ -49,6 +49,15 @@ More documentation coming soon.
 0.1.0
 
 * Initial Commit
+
+0.1.0-2
+
+* Generate New Receive Address
+
+0.1.0-3
+
+* Get User Details
+* Refactor some attribute capitalization
 
 ## Contributing
 
