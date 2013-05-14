@@ -59,6 +59,11 @@ More documentation coming soon.
 * Get User Details
 * Refactor some attribute capitalization
 
+0.1.0-4
+
+* User Details unittest
+* Small tweaks
+
 ## Contributing
 
 Contributions are greatly appreciated.  Please make all requests using built in issue tracking at GitHub.

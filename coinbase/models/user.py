@@ -14,7 +14,7 @@ class CoinbaseUser(object):
                  buy_limit,
                  sell_limit):
 
-        self.user_id = user_id
+        self.id = user_id
         self.name = name
         self.email = email
         self.time_zone = time_zone

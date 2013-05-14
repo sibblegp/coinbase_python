@@ -345,14 +345,14 @@ class CoinbaseAccount(object):
         response = self.session.get(url, params=self.global_request_params)
         results = response.json()
 
-        user_details = results['users'][0]
+        user_details = results['users'][0]['user']
 
         #Convert our balance and limits to proper amounts
         balance = CoinbaseAmount(user_details['balance']['amount'], user_details['balance']['currency'])
         buy_limit = CoinbaseAmount(user_details['buy_limit']['amount'], user_details['buy_limit']['currency'])
         sell_limit = CoinbaseAmount(user_details['sell_limit']['amount'], user_details['sell_limit']['currency'])
 
-        user = CoinbaseUser(user_id=user_details['user_id'],
+        user = CoinbaseUser(user_id=user_details['id'],
                             name=user_details['name'],
                             email=user_details['email'],
                             time_zone=user_details['time_zone'],
