@@ -365,14 +365,6 @@ class CoinbaseAccount(object):
 
         return user
 
-        #Models to create
-        ###Sale
-<<<<<<< HEAD
-        ###Receive address?
-=======
-        ###User
-        ###Receive address?
-
     def generate_receive_address(self, callback_url=None):
         """
         Generate a new receive address
@@ -387,5 +379,3 @@ class CoinbaseAccount(object):
         }
         response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
         return response.json()['address']
-
->>>>>>> 8c953095bd5d6a757ee499d62396a87f4300fa26
