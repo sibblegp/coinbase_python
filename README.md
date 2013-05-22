@@ -64,6 +64,11 @@ More documentation coming soon.
 * User Details unittest
 * Small tweaks
 
+0.1.0-5
+
+* Set flag for token status when initializing
+* Raise error if transaction fails
+
 ## Contributing
 
 Contributions are greatly appreciated.  Please make all requests using built in issue tracking at GitHub.
