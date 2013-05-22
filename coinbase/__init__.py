@@ -38,6 +38,8 @@ from oauth2client.client import AccessTokenRefreshError, OAuth2Credentials, Acce
 import requests
 import httplib2
 import json
+import os
+import inspect
 
 #TODO: Switch to decimals from floats
 #from decimal import Decimal
@@ -70,8 +72,15 @@ class CoinbaseAccount(object):
 
         if oauth2_credentials:
 
+            #CA Cert Path
+            ca_directory = os.path.abspath(__file__).split('/')[0:-1]
+
+            ca_path = '/'.join(ca_directory) + '/ca_certs.txt'
+
+            print ca_path
+
             #Set CA certificates (breaks without them)
-            self.http = httplib2.Http(ca_certs='ca-certs.txt')
+            self.http = httplib2.Http(ca_certs=ca_path)
 
             #Create our credentials from the JSON sent
             self.oauth2_credentials = OAuth2Credentials.from_json(oauth2_credentials)
