@@ -71,13 +71,17 @@ class CoinbaseAccount(object):
         if oauth2_credentials:
 
             #Set CA certificates (breaks without them)
-            self.http = httplib2.Http(ca_certs='ca-certs.txt')
+            self.http = httplib2.Http()
 
             #Create our credentials from the JSON sent
             self.oauth2_credentials = OAuth2Credentials.from_json(oauth2_credentials)
 
             #Check our token
-            self._check_oauth_expired()
+            self.token_expired = False
+            try:
+                self._check_oauth_expired()
+            except AccessTokenCredentialsError:
+                self.token_expired = True
 
             #Apply our oAuth credentials to the session
             self.oauth2_credentials.apply(headers=self.session.headers)
@@ -125,10 +129,10 @@ class CoinbaseAccount(object):
             self.oauth2_credentials.refresh(http=self.http)
 
             #We were successful
-            print 'Your token was refreshed with the following response...'
+            #print 'Your token was refreshed with the following response...'
 
             #Return the token for storage
-            return self.oauth2_credentials.to_json()
+            return self.oauth2_credentials
 
         #If the refresh token was invalid
         except AccessTokenRefreshError:
@@ -285,8 +289,7 @@ class CoinbaseAccount(object):
         response_parsed = response.json()
 
         if response_parsed['success'] == False:
-            pass
-            #TODO:  DO ERROR HANDLING and raise something
+            raise RuntimeError('Transaction Failed')
 
         return CoinbaseTransaction(response_parsed['transaction'])
 
