@@ -71,7 +71,7 @@ class CoinbaseAccount(object):
         if oauth2_credentials:
 
             #Set CA certificates (breaks without them)
-            self.http = httplib2.Http()
+            self.http = httplib2.Http(ca_certs='ca-certs.txt')
 
             #Create our credentials from the JSON sent
             self.oauth2_credentials = OAuth2Credentials.from_json(oauth2_credentials)
