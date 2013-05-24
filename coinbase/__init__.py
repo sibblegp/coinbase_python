@@ -77,8 +77,6 @@ class CoinbaseAccount(object):
 
             ca_path = '/'.join(ca_directory) + '/ca_certs.txt'
 
-            print ca_path
-
             #Set CA certificates (breaks without them)
             self.http = httplib2.Http(ca_certs=ca_path)
 
