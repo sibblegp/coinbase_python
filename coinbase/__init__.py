@@ -45,7 +45,7 @@ import inspect
 #from decimal import Decimal
 
 from coinbase.config import COINBASE_ENDPOINT
-from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser
+from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer
 
 
 class CoinbaseAccount(object):
@@ -328,6 +328,34 @@ class CoinbaseAccount(object):
                     transactions.append(CoinbaseTransaction(transaction['transaction']))
 
         return transactions
+    
+    def transfers(self, count=30):
+        """
+        Retrieve the list of transfers for the current account
+        :param count: How many transfers to retrieve
+        :return: List of CoinbaseTransfer objects
+        """
+        url = COINBASE_ENDPOINT + '/transfers'
+        pages = count / 30 + 1
+        transfers = []
+
+        reached_final_page = False
+
+        for page in xrange(1, pages + 1):
+
+            if not reached_final_page:
+                params = {'page': page}
+                params.update(self.global_request_params)
+                response = self.session.get(url=url, params=params)
+                parsed_transfers = response.json()
+
+                if parsed_transfers['num_pages'] == page:
+                    reached_final_page = True
+
+                for transfer in parsed_transfers['transfers']:
+                    transfers.append(CoinbaseTransfer(transfer['transfer']))
+
+        return transfers
 
     def get_transaction(self, transaction_id):
         """
@@ -389,3 +417,6 @@ class CoinbaseAccount(object):
         }
         response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
         return response.json()['address']
+
+
+
