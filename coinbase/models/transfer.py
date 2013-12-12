@@ -18,7 +18,7 @@ class CoinbaseTransfer(object):
         self.fees_bank = CoinbaseAmount(fees_bank_cents, fees_bank_currency_iso)
 
         self.payout_date = transfer['payout_date']
-        self.transaction_id = transfer['transaction_id']
+        self.transaction_id = transfer.get('transaction_id','')
         self.status = transfer['status']
 
         btc_amount = transfer['btc']['amount']
@@ -33,7 +33,7 @@ class CoinbaseTransfer(object):
         total_currency = transfer['total']['currency']
         self.total_amount = CoinbaseAmount(total_amount, total_currency)
 
-        self.description = transfer['description']
+        self.description = transfer.get('description','')
 
     def refresh(self):
         pass

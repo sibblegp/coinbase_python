@@ -45,7 +45,7 @@ import inspect
 #from decimal import Decimal
 
 from coinbase.config import COINBASE_ENDPOINT
-from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer
+from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer, CoinbaseError
 
 
 class CoinbaseAccount(object):
@@ -193,6 +193,10 @@ class CoinbaseAccount(object):
         response = self.session.get(url, params=self.global_request_params)
         return [contact['contact'] for contact in response.json()['contacts']]
 
+
+
+
+
     def buy_price(self, qty=1):
         """
         Return the buy price of BitCoin in USD
@@ -224,6 +228,48 @@ class CoinbaseAccount(object):
     #     url = COINBASE_ENDPOINT + '/account/receive_address'
     #     response = self.session.get(url)
     #     return response.json()
+
+
+    def buy_btc(self, qty, pricevaries=False):
+        """
+        Buy BitCoin from Coinbase for USD
+        :param qty: BitCoin quantity to be bought
+        :param pricevaries: Boolean value that indicates whether or not the transaction should
+                be processed if Coinbase cannot gaurentee the current price. 
+        :return: CoinbaseTransfer with all transfer details on success or 
+                 CoinbaseError with the error list received from Coinbase on failure
+        """
+        url = COINBASE_ENDPOINT + '/buys'
+        request_data = {
+            "qty": qty,
+            "agree_btc_amount_varies": pricevaries
+        }
+        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        response_parsed = response.json()
+        if response_parsed['success'] == False:
+            return CoinbaseError(response_parsed['errors'])
+
+        return CoinbaseTransfer(response_parsed['transfer'])
+
+
+    def sell_btc(self, qty):
+        """
+        Sell BitCoin to Coinbase for USD
+        :param qty: BitCoin quantity to be sold
+        :return: CoinbaseTransfer with all transfer details on success or 
+                 CoinbaseError with the error list received from Coinbase on failure
+        """
+        url = COINBASE_ENDPOINT + '/sells'
+        request_data = {
+            "qty": qty,
+        }
+        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        response_parsed = response.json()
+        if response_parsed['success'] == False:
+            return CoinbaseError(response_parsed['errors'])
+
+        return CoinbaseTransfer(response_parsed['transfer'])       
+
 
     def request(self, from_email, amount, notes='', currency='BTC'):
         """
