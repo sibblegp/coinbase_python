@@ -1,8 +1,6 @@
 __author__ = 'vkhougaz'
 
 from amount import CoinbaseAmount
-from decimal import Decimal
-from coinbase.config import CENTS_PER_BITCOIN, CENTS_PER_OTHER
 
 class CoinbaseButton(object):
 
@@ -17,13 +15,9 @@ class CoinbaseButton(object):
 
         self.name = button['name']
         if 'price' in button:
-            price = Decimal(button['price']['cents'])
+            price_cents = button['price']['cents']
             price_currency_iso = button['price']['currency_iso']
-            if price_currency_iso == 'BTC':
-                price /= CENTS_PER_BITCOIN
-            else:
-                price /= CENTS_PER_OTHER
-            self.price = CoinbaseAmount(price, price_currency_iso)
+            self.price = CoinbaseAmount.from_cents(price_cents, price_currency_iso)
         else:
             self.price = None
         self.type = button.get('type', None)
