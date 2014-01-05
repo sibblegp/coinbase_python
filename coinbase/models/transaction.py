@@ -8,16 +8,18 @@ class CoinbaseTransaction(object):
     def __init__(self, transaction):
 
         self.transaction_id = transaction['id']
-        self.created_at = transaction['created_at']
-        self.notes = transaction['notes']
+        self.created_at = transaction.get('created_at', None)
+        self.notes = transaction.get('notes', '')
 
-        transaction_amount = transaction['amount']['amount']
-        transaction_currency = transaction['amount']['currency']
+        if 'amount' in transaction:
+            transaction_amount = transaction['amount']['amount']
+            transaction_currency = transaction['amount']['currency']
+            self.amount = CoinbaseAmount(transaction_amount, transaction_currency)
+        else:
+            self.amount = None
 
-        self.amount = CoinbaseAmount(transaction_amount, transaction_currency)
-
-        self.status = transaction['status']
-        self.request = transaction['request']
+        self.status = transaction.get('status', None)
+        self.request = transaction.get('request', None)
 
 
         #Sender Information

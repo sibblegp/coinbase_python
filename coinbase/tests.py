@@ -142,8 +142,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
         this(new_transaction_with_btc_address.recipient_address).should.equal('15yHmnB5vY68sXpAU9pR71rnyPAGLLWeRP')
 
         HTTPretty.register_uri(HTTPretty.POST, "https://coinbase.com/api/v1/transactions/send_money",
-                               body='''{"success":true,"transaction":{"id":"5158b2920b974ea4cb000003","created_at":"2013-03-31T15:02:58-07:00","hsh":null,"notes":"","amount":{"amount":"-0.10000000","currency":"BTC"},"request":false,"status":"pending","sender":{"id":"509e01ca12838e0200000212","email":"gsibble@gmail.com","name":"gsibble@gmail.com"},"recipient":{"id":"4efec8d7bedd320001000003","email":"brian@coinbase.com","name":"Brian Armstrong"},"recipient_address":"brian@coinbase.com"}}
-''',
+                               body='''{"success":true,"transaction":{"id":"5158b2920b974ea4cb000003","created_at":"2013-03-31T15:02:58-07:00","hsh":null,"notes":"","amount":{"amount":"-0.10000000","currency":"BTC"},"request":false,"status":"pending","sender":{"id":"509e01ca12838e0200000212","email":"gsibble@gmail.com","name":"gsibble@gmail.com"},"recipient":{"id":"4efec8d7bedd320001000003","email":"brian@coinbase.com","name":"Brian Armstrong"},"recipient_address":"brian@coinbase.com"}}''',
                                content_type='text/json')
 
         new_transaction_with_email = self.account.send('brian@coinbase.com', amount=0.1)
@@ -155,7 +154,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/transactions",
                                body='''{"current_user":{"id":"509e01ca12838e0200000212","email":"gsibble@gmail.com","name":"gsibble@gmail.com"},"balance":{"amount":"0.00000000","currency":"BTC"},"total_count":4,"num_pages":1,"current_page":1,"transactions":[{"transaction":{"id":"514e4c37802e1bf69100000e","created_at":"2013-03-23T17:43:35-07:00","hsh":null,"notes":"Testing","amount":{"amount":"1.00000000","currency":"BTC"},"request":true,"status":"pending","sender":{"id":"514e4c1c802e1bef9800001e","email":"george@atlasr.com","name":"george@atlasr.com"},"recipient":{"id":"509e01ca12838e0200000212","email":"gsibble@gmail.com","name":"gsibble@gmail.com"}}},{"transaction":{"id":"514e4c1c802e1bef98000020","created_at":"2013-03-23T17:43:08-07:00","hsh":null,"notes":"Testing","amount":{"amount":"1.00000000","currency":"BTC"},"request":true,"status":"pending","sender":{"id":"514e4c1c802e1bef9800001e","email":"george@atlasr.com","name":"george@atlasr.com"},"recipient":{"id":"509e01ca12838e0200000212","email":"gsibble@gmail.com","name":"gsibble@gmail.com"}}},{"transaction":{"id":"514b9fb1b8377ee36500000d","created_at":"2013-03-21T17:02:57-07:00","hsh":"42dd65a18dbea0779f32021663e60b1fab8ee0f859db7172a078d4528e01c6c8","notes":"You gave me this a while ago. It's turning into a fair amount of cash and thought you might want it back :) Building something on your API this weekend. Take care!","amount":{"amount":"-1.00000000","currency":"BTC"},"request":false,"status":"complete","sender":{"id":"509e01ca12838e0200000212","email":"gsibble@gmail.com","name":"gsibble@gmail.com"},"recipient":{"id":"4efec8d7bedd320001000003","email":"brian@coinbase.com","name":"Brian Armstrong"},"recipient_address":"brian@coinbase.com"}},{"transaction":{"id":"509e01cb12838e0200000224","created_at":"2012-11-09T23:27:07-08:00","hsh":"ac9b0ffbe36dbe12c5ca047a5bdf9cadca3c9b89b74751dff83b3ac863ccc0b3","notes":"","amount":{"amount":"1.00000000","currency":"BTC"},"request":false,"status":"complete","sender":{"id":"4efec8d7bedd320001000003","email":"brian@coinbase.com","name":"Brian Armstrong"},"recipient":{"id":"509e01ca12838e0200000212","email":"gsibble@gmail.com","name":"gsibble@gmail.com"},"recipient_address":"gsibble@gmail.com"}}]}''',
-                           content_type='text/json')
+                               content_type='text/json')
 
         transaction_list = self.account.transactions()
 
@@ -184,3 +183,74 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         this(user.id).should.equal("509f01da12837e0201100212")
         this(user.balance).should.equal(1225.86084181)
+
+    # The following tests use the example request/responses from the coinbase API docs:
+    # test_creating_button, test_creating_order, test_getting_order
+    @httprettified
+    def test_creating_button(self):
+
+        HTTPretty.register_uri(HTTPretty.POST, "https://coinbase.com/api/v1/buttons",
+                               body='''{"success":true,"button":{"code":"93865b9cae83706ae59220c013bc0afd","type":"buy_now","style":"custom_large","text":"Pay With Bitcoin","name":"test","description":"Sample description","custom":"Order123","callback_url":"http://www.example.com/my_custom_button_callback","price":{"cents":123,"currency_iso":"USD"}}}''',
+                               content_type='text/json')
+
+        button = self.account.create_button(
+            name="test",
+            type="buy_now",
+            price=1.23,
+            currency="USD",
+            custom="Order123",
+            callback_url="http://www.example.com/my_custom_button_callback",
+            description="Sample description",
+            style="custom_large",
+            include_email=True
+        )
+        this(button.code).should.equal("93865b9cae83706ae59220c013bc0afd")
+        this(button.name).should.equal("test")
+        this(button.price).should.equal(1.23)
+        this(button.price.currency).should.equal("USD")
+        this(button.include_address).should.equal(None)
+
+    @httprettified
+    def test_creating_order(self):
+
+        HTTPretty.register_uri(HTTPretty.POST, "https://coinbase.com/api/v1/buttons/93865b9cae83706ae59220c013bc0afd/create_order",
+                               body='''{"success":true,"order":{"id":"7RTTRDVP","created_at":"2013-11-09T22:47:10-08:00","status":"new","total_btc":{"cents":100000000,"currency_iso":"BTC"},"total_native":{"cents":100000000,"currency_iso":"BTC"},"custom":"Order123","receive_address":"mgrmKftH5CeuFBU3THLWuTNKaZoCGJU5jQ","button":{"type":"buy_now","name":"test","description":"Sample description","id":"93865b9cae83706ae59220c013bc0afd"},"transaction":null}}''',
+                               content_type='text/json')
+
+        order = self.account.create_order("93865b9cae83706ae59220c013bc0afd")
+
+        this(order.id).should.equal("7RTTRDVP")
+        this(order.total_btc).should.equal(1)
+        this(order.total_btc.currency).should.equal("BTC")
+        this(order.button.button_id).should.equal("93865b9cae83706ae59220c013bc0afd")
+        this(order.transaction).should.equal(None)
+
+    @httprettified
+    def test_order_list(self):
+
+        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/orders",
+                               body='''{"orders":[{"order":{"id":"A7C52JQT","created_at":"2013-03-11T22:04:37-07:00","status":"completed","total_btc":{"cents":100000000,"currency_iso":"BTC"},"total_native":{"cents":3000,"currency_iso":"USD"},"custom":"","button":{"type":"buy_now","name":"Order #1234","description":"order description","id":"eec6d08e9e215195a471eae432a49fc7"},"transaction":{"id":"513eb768f12a9cf27400000b","hash":"4cc5eec20cd692f3cdb7fc264a0e1d78b9a7e3d7b862dec1e39cf7e37ababc14","confirmations":0}}}],"total_count":1,"num_pages":1,"current_page":1}''',
+                               content_type='text/json')
+
+        orders = self.account.orders()
+        this(orders).should.be.an(list)
+        this(orders[0].id).should.equal("A7C52JQT")
+
+    @httprettified
+    def test_getting_order(self):
+
+        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/orders/A7C52JQT",
+                               body='''{"order":{"id":"A7C52JQT","created_at":"2013-03-11T22:04:37-07:00","status":"completed","total_btc":{"cents":10000000,"currency_iso":"BTC"},"total_native":{"cents":10000000,"currency_iso":"BTC"},"custom":"","button":{"type":"buy_now","name":"test","description":"","id":"eec6d08e9e215195a471eae432a49fc7"},"transaction":{"id":"513eb768f12a9cf27400000b","hash":"4cc5eec20cd692f3cdb7fc264a0e1d78b9a7e3d7b862dec1e39cf7e37ababc14","confirmations":0}}}''',
+                               content_type='text/json')
+
+        order = self.account.get_order("A7C52JQT")
+
+        this(order.id).should.equal("A7C52JQT")
+        this(order.status).should.equal("completed")
+        this(order.total_btc).should.equal(.1)
+        this(order.total_native.currency).should.equal("BTC")
+        this(order.button.name).should.equal("test")
+        this(order.transaction.transaction_id).should.equal("513eb768f12a9cf27400000b")
+
+if __name__ == '__main__':
+    unittest.main()

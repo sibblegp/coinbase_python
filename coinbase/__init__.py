@@ -44,8 +44,8 @@ import inspect
 #TODO: Switch to decimals from floats
 #from decimal import Decimal
 
-from coinbase.config import COINBASE_ENDPOINT
-from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer, CoinbaseError
+from .config import COINBASE_ENDPOINT, COINBASE_ITEMS_PER_PAGE
+from .models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer, CoinbaseError, CoinbaseButton, CoinbaseOrder
 
 
 class CoinbaseAccount(object):
@@ -464,5 +464,129 @@ class CoinbaseAccount(object):
         response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
         return response.json()['address']
 
+    def create_button(self, name,
+                            price,
+                            currency='BTC',
+                            type=None,
+                            style=None,
+                            text=None,
+                            description=None,
+                            custom=None,
+                            callback_url=None,
+                            success_url=None,
+                            cancel_url=None,
+                            info_url=None,
+                            variable_price=None,
+                            choose_price=None,
+                            include_address=None,
+                            include_email=None,
+                            price1=None, price2=None, price3=None, price4=None, price5=None):
+        """
+        Create a new button
+        :param name: The name of the item for which you are collecting bitcoin.
+        :param price: The price of the item
+        :param currency: The currency to charge
+        :param type: One of buy_now, donation, and subscription. Default is buy_now.
+        :param style: One of buy_now_large, buy_now_small, donation_large, donation_small, subscription_large, subscription_small, custom_large, custom_small, and none. Default is buy_now_large. none is used if you plan on triggering the payment modal yourself using your own button or link.
+        :param text: Allows you to customize the button text on custom_large and custom_small styles. Default is Pay With Bitcoin.
+        :param description: Longer description of the item in case you want it added to the user's transaction notes.
+        :param custom: An optional custom parameter. Usually an Order, User, or Product ID corresponding to a record in your database.
+        :param callback_url: A custom callback URL specific to this button.
+        :param success_url: A custom success URL specific to this button. The user will be redirected to this URL after a successful payment.
+        :param cancel_url: A custom cancel URL specific to this button. The user will be redirected to this URL after a canceled order.
+        :param info_url: A custom info URL specific to this button. Displayed to the user after a successful purchase for sharing.
+        :param variable_price: Allow users to change the price on the generated button.
+        :param choose_price: Show some suggested prices
+        :param include_address: Collect shipping address from customer (not for use with inline iframes).
+        :param include_email: Collect email address from customer (not for use with inline iframes).
+        :param price1: Suggested price 1
+        :param price2: Suggested price 2
+        :param price3: Suggested price 3
+        :param price4: Suggested price 4
+        :param price5: Suggested price 5
+        :return: A CoinbaseButton object
+        """
+        url = COINBASE_ENDPOINT + '/buttons'
+        price = str(price)
 
+        request_data = {
+            "button": {
+                "name": name,
+                "price": price,
+                "currency": currency,
+                "type": type,
+                "style": style,
+                "text": text,
+                "description": description,
+                "custom": custom,
+                "callback_url": callback_url,
+                "success_url": success_url,
+                "cancel_url": cancel_url,
+                "info_url": info_url,
+                "variable_price": variable_price,
+                "choose_price": choose_price,
+                "include_address": include_address,
+                "include_email": include_email,
+                "price1": price1,
+                "price2": price2,
+                "price3": price3,
+                "price4": price4,
+                "price5": price5
+            }
+        }
+        none_keys = [key for key in request_data['button'].keys() if request_data['button'][key] is None]
+        for key in none_keys:
+            del request_data['button'][key]
 
+        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        return CoinbaseButton(response.json()['button'])
+
+    def create_order(self, code):
+        """
+        Generate a new order from a button
+        :param code: The code of the button for which you wish to create an order
+        :return: A CoinbaseOrder object
+        """
+        url = COINBASE_ENDPOINT + '/buttons/{code}/create_order'.format(code=code)
+
+        response = self.session.post(url=url, params=self.global_request_params)
+        return CoinbaseOrder(response.json()['order'])
+
+    def get_order(self, order_id):
+        """
+        Get an order by id
+        :param order_id: The order id to be retrieved
+        :return: A CoinbaseOrder object
+        """
+        url = COINBASE_ENDPOINT + '/orders/{id}'.format(id=order_id)
+
+        response = self.session.get(url=url, params=self.global_request_params)
+        return CoinbaseOrder(response.json()['order'])
+
+    def orders(self, count=30):
+        """
+        Retrieve the list of orders for the current account
+        :param count: How many orders to retrieve
+        :return: List of CoinbaseOrder objects
+        """
+        url = COINBASE_ENDPOINT + '/orders'
+        pages = count / 30 + 1
+        orders = []
+
+        reached_final_page = False
+
+        for page in xrange(1, pages + 1):
+
+            if not reached_final_page:
+                params = {'page': page}
+                params.update(self.global_request_params)
+                response = self.session.get(url=url, params=params)
+                parsed_orders = response.json()
+
+                if parsed_orders['num_pages'] == page:
+                    reached_final_page = True
+
+                for order in parsed_orders['orders']:
+                    orders.append(CoinbaseOrder(order['order']))
+
+        return orders
