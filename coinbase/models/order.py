@@ -14,6 +14,7 @@ class CoinbaseOrder(object):
         #self.created_at = datetime.strptime(order['created_at'], '%Y-%m-%dT%H:%M:%S-08:00')
         self.created_at = order['created_at']
         self.status = order['status']
+        self.custom = order['custom']
 
         btc_cents = Decimal(order['total_btc']['cents'])
         btc_currency_iso = order['total_btc']['currency_iso']

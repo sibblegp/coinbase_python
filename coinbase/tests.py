@@ -6,7 +6,8 @@ import unittest
 from httpretty import HTTPretty, httprettified
 
 from coinbase import CoinbaseAccount
-from models import CoinbaseAmount
+from coinbase.models import CoinbaseAmount
+from decimal import Decimal
 
 TEMP_CREDENTIALS = '''{"_module": "oauth2client.client", "token_expiry": "2014-03-31T23:27:40Z", "access_token": "c15a9f84e471db9b0b8fb94f3cb83f08867b4e00cb823f49ead771e928af5c79", "token_uri": "https://www.coinbase.com/oauth/token", "invalid": false, "token_response": {"access_token": "c15a9f84e471db9b0b8fb94f3cb83f08867b4e00cb823f49ead771e928af5c79", "token_type": "bearer", "expires_in": 7200, "refresh_token": "90cb2424ddc39f6668da41a7b46dfd5a729ac9030e19e05fd95bb1880ad07e65", "scope": "all"}, "client_id": "2df06cb383f4ffffac20e257244708c78a1150d128f37d420f11fdc069a914fc", "id_token": null, "client_secret": "7caedd79052d7e29aa0f2700980247e499ce85381e70e4a44de0c08f25bded8a", "revoke_uri": "https://accounts.google.com/o/oauth2/revoke", "_class": "OAuth2Credentials", "refresh_token": "90cb2424ddc39f6668da41a7b46dfd5a729ac9030e19e05fd95bb1880ad07e65", "user_agent": null}'''
 
@@ -16,8 +17,14 @@ class CoinBaseAmountTests(unittest.TestCase):
         self.cb_amount = CoinbaseAmount(1, 'BTC')
 
     def test_cb_amount_class(self):
-        this(self.cb_amount).should.equal(1)
+        this(self.cb_amount).should.be.an(Decimal)
+        this(Decimal(self.cb_amount)).should.equal(Decimal('1'))
         this(self.cb_amount.currency).should.equal('BTC')
+
+    def test_cb_amount_equality(self):
+        this(CoinbaseAmount(1, 'BTC')).should.equal(CoinbaseAmount(1, 'BTC'))
+        this(CoinbaseAmount(1, 'BTC')).doesnt.equal(CoinbaseAmount(1, 'USD'))
+        assert CoinbaseAmount(1, 'BTC') == 1
 
 class CoinBaseAPIKeyTests(unittest.TestCase):
 
@@ -31,7 +38,7 @@ class CoinBaseAPIKeyTests(unittest.TestCase):
                            body='''{"amount":"1.00000000","currency":"BTC"}''',
                            content_type='text/json')
 
-        this(self.account.balance).should.equal(1.0)
+        this(float(self.account.balance)).should.equal(1)
 
 class CoinBaseLibraryTests(unittest.TestCase):
 
@@ -45,7 +52,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
                                body='''{"amount":"0.00000000","currency":"BTC"}''',
                                content_type='text/json')
 
-        this(self.account.balance).should.equal(0.0)
+        this(float(self.account.balance)).should.equal(0.0)
         this(self.account.balance.currency).should.equal('BTC')
 
         #TODO:  Switch to decimals
@@ -76,7 +83,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
                                content_type='text/json')
 
         buy_price_1 = self.account.buy_price(1)
-        this(buy_price_1).should.be.an(float)
+        this(buy_price_1).should.be.an(Decimal)
         this(buy_price_1).should.be.lower_than(100)
         this(buy_price_1.currency).should.equal('USD')
 
@@ -98,7 +105,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
                                content_type='text/json')
 
         sell_price_1 = self.account.sell_price(1)
-        this(sell_price_1).should.be.an(float)
+        this(sell_price_1).should.be.an(Decimal)
         this(sell_price_1).should.be.lower_than(100)
         this(sell_price_1.currency).should.equal('USD')
 
@@ -120,7 +127,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         new_request = self.account.request('george@atlasr.com', 1, 'Testing')
 
-        this(new_request.amount).should.equal(1)
+        this(new_request.amount).should.equal(CoinbaseAmount(Decimal(1), 'BTC'))
         this(new_request.request).should.equal(True)
         this(new_request.sender.email).should.equal('george@atlasr.com')
         this(new_request.recipient.email).should.equal('gsibble@gmail.com')
@@ -135,7 +142,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         new_transaction_with_btc_address = self.account.send('15yHmnB5vY68sXpAU9pR71rnyPAGLLWeRP', amount=0.1)
 
-        this(new_transaction_with_btc_address.amount).should.equal(-0.1)
+        this(new_transaction_with_btc_address.amount).should.equal(CoinbaseAmount(Decimal('-0.1'), 'BTC'))
         this(new_transaction_with_btc_address.request).should.equal(False)
         this(new_transaction_with_btc_address.sender.email).should.equal('gsibble@gmail.com')
         this(new_transaction_with_btc_address.recipient).should.equal(None)
@@ -170,7 +177,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
         transaction = self.account.get_transaction('5158b227802669269c000009')
 
         this(transaction.status).should.equal('pending')
-        this(transaction.amount).should.equal(-0.1)
+        this(transaction.amount).should.equal(CoinbaseAmount(Decimal("-0.1"), "BTC"))
 
     @httprettified
     def test_getting_user_details(self):
@@ -182,13 +189,12 @@ class CoinBaseLibraryTests(unittest.TestCase):
         user = self.account.get_user_details()
 
         this(user.id).should.equal("509f01da12837e0201100212")
-        this(user.balance).should.equal(1225.86084181)
+        this(user.balance).should.equal(CoinbaseAmount(Decimal("1225.86084181"), "BTC"))
 
     # The following tests use the example request/responses from the coinbase API docs:
     # test_creating_button, test_creating_order, test_getting_order
     @httprettified
     def test_creating_button(self):
-
         HTTPretty.register_uri(HTTPretty.POST, "https://coinbase.com/api/v1/buttons",
                                body='''{"success":true,"button":{"code":"93865b9cae83706ae59220c013bc0afd","type":"buy_now","style":"custom_large","text":"Pay With Bitcoin","name":"test","description":"Sample description","custom":"Order123","callback_url":"http://www.example.com/my_custom_button_callback","price":{"cents":123,"currency_iso":"USD"}}}''',
                                content_type='text/json')
@@ -206,8 +212,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
         )
         this(button.code).should.equal("93865b9cae83706ae59220c013bc0afd")
         this(button.name).should.equal("test")
-        this(button.price).should.equal(1.23)
-        this(button.price.currency).should.equal("USD")
+        this(button.price).should.equal(CoinbaseAmount(Decimal('1.23'), "USD"))
         this(button.include_address).should.equal(None)
 
     @httprettified
@@ -220,8 +225,8 @@ class CoinBaseLibraryTests(unittest.TestCase):
         order = self.account.create_order("93865b9cae83706ae59220c013bc0afd")
 
         this(order.id).should.equal("7RTTRDVP")
-        this(order.total_btc).should.equal(1)
-        this(order.total_btc.currency).should.equal("BTC")
+        this(order.total_btc).should.equal(CoinbaseAmount(1, 'BTC'))
+
         this(order.button.button_id).should.equal("93865b9cae83706ae59220c013bc0afd")
         this(order.transaction).should.equal(None)
 
@@ -247,10 +252,11 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         this(order.id).should.equal("A7C52JQT")
         this(order.status).should.equal("completed")
-        this(order.total_btc).should.equal(.1)
-        this(order.total_native.currency).should.equal("BTC")
+        this(order.total_btc).should.equal(CoinbaseAmount(Decimal(".1"), "BTC"))
         this(order.button.name).should.equal("test")
         this(order.transaction.transaction_id).should.equal("513eb768f12a9cf27400000b")
 
 if __name__ == '__main__':
+    logging.basicConfig( stream=sys.stderr )
+    logging.getLogger( "SomeTest.testSomething" ).setLevel( logging.DEBUG )
     unittest.main()
