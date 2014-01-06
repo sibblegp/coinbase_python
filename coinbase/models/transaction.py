@@ -6,6 +6,7 @@ from contact import CoinbaseContact
 class CoinbaseTransaction(object):
 
     def __init__(self, transaction):
+        self.data = transaction
 
         self.transaction_id = transaction['id']
         self.created_at = transaction.get('created_at', None)

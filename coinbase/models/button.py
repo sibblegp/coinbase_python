@@ -5,6 +5,7 @@ from amount import CoinbaseAmount
 class CoinbaseButton(object):
 
     def __init__(self, button):
+        self.data = button
         # Sometimes it's called code (create button) and sometimes id (sub item of create button)
         # so we map them together
         if 'id' in button:

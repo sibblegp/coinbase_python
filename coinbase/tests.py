@@ -224,7 +224,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         order = self.account.create_order("93865b9cae83706ae59220c013bc0afd")
 
-        this(order.id).should.equal("7RTTRDVP")
+        this(order.order_id).should.equal("7RTTRDVP")
         this(order.total_btc).should.equal(CoinbaseAmount(1, 'BTC'))
 
         this(order.button.button_id).should.equal("93865b9cae83706ae59220c013bc0afd")
@@ -239,7 +239,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         orders = self.account.orders()
         this(orders).should.be.an(list)
-        this(orders[0].id).should.equal("A7C52JQT")
+        this(orders[0].order_id).should.equal("A7C52JQT")
 
     @httprettified
     def test_getting_order(self):
@@ -250,7 +250,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         order = self.account.get_order("A7C52JQT")
 
-        this(order.id).should.equal("A7C52JQT")
+        this(order.order_id).should.equal("A7C52JQT")
         this(order.status).should.equal("completed")
         this(order.total_btc).should.equal(CoinbaseAmount(Decimal(".1"), "BTC"))
         this(order.button.name).should.equal("test")

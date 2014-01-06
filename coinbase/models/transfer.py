@@ -5,6 +5,8 @@ from amount import CoinbaseAmount
 class CoinbaseTransfer(object):
 
     def __init__(self, transfer):
+        self.data = transfer
+
         self.type = transfer['type']
         self.code = transfer['code']
         self.created_at = transfer['created_at']

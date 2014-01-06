@@ -7,7 +7,9 @@ from transaction import CoinbaseTransaction
 
 class CoinbaseOrder(object):
     def __init__(self, order):
-        self.id = order['id']
+        self.data = order
+
+        self.order_id = order['id']
         # TODO: Account for timezone properly
         #self.created_at = datetime.strptime(order['created_at'], '%Y-%m-%dT%H:%M:%S-08:00')
         self.created_at = order['created_at']
