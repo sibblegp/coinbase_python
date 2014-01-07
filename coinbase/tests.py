@@ -57,6 +57,8 @@ class CoinBaseLibraryTests(unittest.TestCase):
             self.account.balance
         except CoinbaseError as e:
             e.error.should.equal("Invalid api_key")
+            unicode(e).should.equal(u"CoinbaseError: Invalid api_key")
+            str(e).should.equal("CoinbaseError: Invalid api_key")
         except Exception:
             assert False
 
