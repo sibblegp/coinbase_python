@@ -40,9 +40,7 @@ import httplib2
 import json
 import os
 import inspect
-
-#TODO: Switch to decimals from floats
-#from decimal import Decimal
+import copy
 
 from .config import COINBASE_ENDPOINT, COINBASE_ITEMS_PER_PAGE
 from .models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer, CoinbaseError, CoinbaseButton, CoinbaseOrder
@@ -158,17 +156,47 @@ class CoinbaseAccount(object):
         #Check if the oauth token is expired and refresh it if necessary
         self._check_oauth_expired()
 
+    _get    = lambda self, url, data=None, params=None: self.make_request(self.session.get   , url, data, params)
+    _post   = lambda self, url, data=None, params=None: self.make_request(self.session.post  , url, data, params)
+    _put    = lambda self, url, data=None, params=None: self.make_request(self.session.put   , url, data, params)
+    _delete = lambda self, url, data=None, params=None: self.make_request(self.session.delete, url, data, params)
+
+    def make_request(self, request_func, url, data=None, params=None):
+        if params:
+            # We don't want to change this object, it is passed by reference
+            params = copy.copy(params)
+            params.update(self.global_request_params)
+        else:
+            params = self.global_request_params
+
+        response = request_func(COINBASE_ENDPOINT + url, data=data, params=params)
+        response_parsed = response.json()
+
+        if response.status_code != 200:
+            if 'error' in response_parsed:
+                raise CoinbaseError(response_parsed['error'])
+            else:
+                raise CoinbaseError('Response code not 200, was {}'.format(response.status_code))
+
+        if 'success' in response_parsed and not response_parsed['success']:
+            if 'error' in response_parsed:
+                raise CoinbaseError(response_parsed['error'])
+            elif 'errors' in response_parsed:
+                raise CoinbaseError(response_parsed['errors'])
+            else:
+                raise CoinbaseError('Success was false in response, unknown error')
+
+        return response_parsed
+
+
     @property
     def balance(self):
         """
         Retrieve coinbase's account balance
 
-        :return: CoinbaseAmount (float) with currency attribute
+        :return: CoinbaseAmount with currency attribute
         """
-
-        url = COINBASE_ENDPOINT + '/account/balance'
-        response = self.session.get(url, params=self.global_request_params)
-        response_parsed = response.json()
+        response_parsed = self._get('/account/balance')
         return CoinbaseAmount(response_parsed['amount'], response_parsed['currency'])
 
     @property
@@ -178,9 +206,7 @@ class CoinbaseAccount(object):
 
         :return: String address of account
         """
-        url = COINBASE_ENDPOINT + '/account/receive_address'
-        response = self.session.get(url, params=self.global_request_params)
-        response_parsed = response.json()
+        response_parsed = self._get('/account/receive_address')
         return response_parsed['address']
 
     @property
@@ -190,65 +216,41 @@ class CoinbaseAccount(object):
 
         :return: List of contacts in the account
         """
-        url = COINBASE_ENDPOINT + '/contacts'
-        response = self.session.get(url, params=self.global_request_params)
-        return [contact['contact'] for contact in response.json()['contacts']]
-
-
-
-
+        response_parsed = self._get('/contacts')
+        return [contact['contact'] for contact in response_parsed['contacts']]
 
     def buy_price(self, qty=1):
         """
         Return the buy price of BitCoin in USD
         :param qty: Quantity of BitCoin to price
-        :return: CoinbaseAmount (float) with currency attribute
+        :return: CoinbaseAmount with currency attribute
         """
-        url = COINBASE_ENDPOINT + '/prices/buy'
-        params = {'qty': qty}
-        params.update(self.global_request_params)
-        response = self.session.get(url, params=params)
-        results = response.json()
-        return CoinbaseAmount(results['amount'], results['currency'])
+        response_parsed = self._get('/prices/buy', data=json.dumps({"qty": qty}))
+        return CoinbaseAmount(response_parsed['amount'], response_parsed['currency'])
 
     def sell_price(self, qty=1):
         """
         Return the sell price of BitCoin in USD
         :param qty: Quantity of BitCoin to price
-        :return: CoinbaseAmount (float) with currency attribute
+        :return: CoinbaseAmount with currency attribute
         """
-        url = COINBASE_ENDPOINT + '/prices/sell'
-        params = {'qty': qty}
-        params.update(self.global_request_params)
-        response = self.session.get(url, params=params)
-        response_parsed = response.json()
+        response_parsed = self._get('/prices/sell', data=json.dumps({"qty": qty}))
         return CoinbaseAmount(response_parsed['amount'], response_parsed['currency'])
-
-    # @property
-    # def user(self):
-    #     url = COINBASE_ENDPOINT + '/account/receive_address'
-    #     response = self.session.get(url)
-    #     return response.json()
-
 
     def buy_btc(self, qty, pricevaries=False):
         """
         Buy BitCoin from Coinbase for USD
         :param qty: BitCoin quantity to be bought
         :param pricevaries: Boolean value that indicates whether or not the transaction should
-                be processed if Coinbase cannot gaurentee the current price. 
+                be processed if Coinbase cannot guarantee the current price.
         :return: CoinbaseTransfer with all transfer details on success or 
                  CoinbaseError with the error list received from Coinbase on failure
         """
-        url = COINBASE_ENDPOINT + '/buys'
         request_data = {
             "qty": qty,
             "agree_btc_amount_varies": pricevaries
         }
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
-        response_parsed = response.json()
-        if response_parsed['success'] is False:
-            return CoinbaseError(response_parsed['errors'])
+        response_parsed = self._post('/buys', data=json.dumps(request_data))
         return CoinbaseTransfer(response_parsed['transfer'])
 
 
@@ -259,14 +261,7 @@ class CoinbaseAccount(object):
         :return: CoinbaseTransfer with all transfer details on success or 
                  CoinbaseError with the error list received from Coinbase on failure
         """
-        url = COINBASE_ENDPOINT + '/sells'
-        request_data = {
-            "qty": qty,
-        }
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
-        response_parsed = response.json()
-        if response_parsed['success'] is False:
-            return CoinbaseError(response_parsed['errors'])
+        response_parsed = self._post('/sells', data=json.dumps({"qty": qty}))
         return CoinbaseTransfer(response_parsed['transfer'])       
 
 
@@ -279,7 +274,6 @@ class CoinbaseAccount(object):
         :param currency: Currency of the request
         :return: CoinbaseTransaction with status and details
         """
-        url = COINBASE_ENDPOINT + '/transactions/request_money'
 
         if currency == 'BTC':
             request_data = {
@@ -299,10 +293,7 @@ class CoinbaseAccount(object):
                 }
             }
 
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
-        response_parsed = response.json()
-        if response_parsed['success'] is False:
-            return CoinbaseError(response_parsed['errors'])
+        response_parsed = self._post('/transactions/request_money', data=json.dumps(request_data))
         return CoinbaseTransaction(response_parsed['transaction'])
 
     def send(self, to_address, amount, notes='', currency='BTC'):
@@ -314,7 +305,6 @@ class CoinbaseAccount(object):
         :param currency: Currency to send
         :return: CoinbaseTransaction with status and details
         """
-        url = COINBASE_ENDPOINT + '/transactions/send_money'
 
         if currency == 'BTC':
             request_data = {
@@ -335,10 +325,7 @@ class CoinbaseAccount(object):
                 }
             }
 
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
-        response_parsed = response.json()
-        if response_parsed['success'] is False:
-            return CoinbaseError(response_parsed['errors'])
+        response_parsed = self._post('/transactions/send_money', data=json.dumps(request_data))
         return CoinbaseTransaction(response_parsed['transaction'])
 
 
@@ -348,7 +335,6 @@ class CoinbaseAccount(object):
         :param count: How many transactions to retrieve
         :return: List of CoinbaseTransaction objects
         """
-        url = COINBASE_ENDPOINT + '/transactions'
         pages = count / 30 + 1
         transactions = []
 
@@ -357,10 +343,7 @@ class CoinbaseAccount(object):
         for page in xrange(1, pages + 1):
 
             if not reached_final_page:
-                params = {'page': page}
-                params.update(self.global_request_params)
-                response = self.session.get(url=url, params=params)
-                response_parsed = response.json()
+                response_parsed = self._get('/transactions', params={'page': page})
 
                 if response_parsed['num_pages'] == page:
                     reached_final_page = True
@@ -376,7 +359,6 @@ class CoinbaseAccount(object):
         :param count: How many transfers to retrieve
         :return: List of CoinbaseTransfer objects
         """
-        url = COINBASE_ENDPOINT + '/transfers'
         pages = count / 30 + 1
         transfers = []
 
@@ -385,12 +367,7 @@ class CoinbaseAccount(object):
         for page in xrange(1, pages + 1):
 
             if not reached_final_page:
-                params = {'page': page}
-                params.update(self.global_request_params)
-                response = self.session.get(url=url, params=params)
-                response_parsed = response.json()
-                if response_parsed['success'] is False:
-                    return CoinbaseError(response_parsed['errors'])
+                response_parsed = self._get('/transfers', params={'page': page})
 
                 if response_parsed['num_pages'] == page:
                     reached_final_page = True
@@ -406,9 +383,7 @@ class CoinbaseAccount(object):
         :param transaction_id: Unique transaction identifier
         :return: CoinbaseTransaction object with transaction details
         """
-        url = COINBASE_ENDPOINT + '/transactions/' + str(transaction_id)
-        response = self.session.get(url, params=self.global_request_params)
-        response_parsed = response.json()
+        response_parsed = self._get('/transactions/{id}'.format(id=transaction_id))
         return CoinbaseTransaction(response_parsed['transaction'])
 
     def get_user_details(self):
@@ -417,9 +392,7 @@ class CoinbaseAccount(object):
 
         :return: CoinbaseUser object with user details
         """
-        url = COINBASE_ENDPOINT + '/users'
-        response = self.session.get(url, params=self.global_request_params)
-        response_parsed = response.json()
+        response_parsed = self._get('/users')
 
         user_details = response_parsed['users'][0]['user']
 
@@ -447,16 +420,12 @@ class CoinbaseAccount(object):
         :param callback_url: The URL to receive instant payment notifications
         :return: The new string address
         """
-        url = COINBASE_ENDPOINT + '/account/generate_receive_address'
         request_data = {
             "address": {
                 "callback_url": callback_url
             }
         }
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
-        response_parsed = response.json()
-        if response_parsed['success'] is False:
-            return CoinbaseError(response_parsed['errors'])
+        response_parsed = self._post('/account/generate_receive_address', data=json.dumps(request_data))
         return response_parsed['address']
 
     def create_button(self, name,
@@ -501,13 +470,10 @@ class CoinbaseAccount(object):
         :param price5: Suggested price 5
         :return: A CoinbaseButton object
         """
-        url = COINBASE_ENDPOINT + '/buttons'
-        price = str(price)
-
         request_data = {
             "button": {
                 "name": name,
-                "price": price,
+                "price": str(price),
                 "currency": currency,
                 "type": type,
                 "style": style,
@@ -533,10 +499,7 @@ class CoinbaseAccount(object):
         for key in none_keys:
             del request_data['button'][key]
 
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
-        response_parsed = response.json()
-        if response_parsed['success'] is False:
-            return CoinbaseError(response_parsed['errors'])
+        response_parsed = self._post('/buttons', data=json.dumps(request_data))
         return CoinbaseButton(response_parsed['button'])
 
     def create_order(self, code):
@@ -545,12 +508,7 @@ class CoinbaseAccount(object):
         :param code: The code of the button for which you wish to create an order
         :return: A CoinbaseOrder object
         """
-        url = COINBASE_ENDPOINT + '/buttons/{code}/create_order'.format(code=code)
-
-        response = self.session.post(url=url, params=self.global_request_params)
-        response_parsed = response.json()
-        if response_parsed['success'] is False:
-            return CoinbaseError(response_parsed['errors'])
+        response_parsed = self._post('/buttons/{code}/create_order'.format(code=code))
         return CoinbaseOrder(response_parsed['order'])
 
     def get_order(self, order_id):
@@ -559,10 +517,7 @@ class CoinbaseAccount(object):
         :param order_id: The order id to be retrieved
         :return: A CoinbaseOrder object
         """
-        url = COINBASE_ENDPOINT + '/orders/{id}'.format(id=order_id)
-
-        response = self.session.get(url=url, params=self.global_request_params)
-        response_parsed = response.json()
+        response_parsed = self._get('/orders/{id}'.format(id=order_id))
         return CoinbaseOrder(response_parsed['order'])
 
     def orders(self, count=30):
@@ -571,7 +526,6 @@ class CoinbaseAccount(object):
         :param count: How many orders to retrieve
         :return: List of CoinbaseOrder objects
         """
-        url = COINBASE_ENDPOINT + '/orders'
         pages = count / 30 + 1
         orders = []
 
@@ -580,10 +534,7 @@ class CoinbaseAccount(object):
         for page in xrange(1, pages + 1):
 
             if not reached_final_page:
-                params = {'page': page}
-                params.update(self.global_request_params)
-                response = self.session.get(url=url, params=params)
-                response_parsed = response.json()
+                response_parsed = self._get('/orders', params={'page': page})
 
                 if response_parsed['num_pages'] == page:
                     reached_final_page = True

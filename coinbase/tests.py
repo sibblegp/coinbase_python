@@ -5,7 +5,7 @@ from sure import it, this, those, these
 import unittest
 from httpretty import HTTPretty, httprettified
 
-from coinbase import CoinbaseAccount
+from coinbase import CoinbaseAccount, CoinbaseError
 from coinbase.models import CoinbaseAmount
 from decimal import Decimal
 
@@ -17,7 +17,7 @@ class CoinBaseAmountTests(unittest.TestCase):
         self.cb_amount = CoinbaseAmount(1, 'BTC')
 
     def test_cb_amount_class(self):
-        this(self.cb_amount).should.be.an(Decimal)
+        this(self.cb_amount).should.be.a(Decimal)
         this(Decimal(self.cb_amount)).should.equal(Decimal('1'))
         this(self.cb_amount.currency).should.equal('BTC')
 
@@ -46,6 +46,35 @@ class CoinBaseLibraryTests(unittest.TestCase):
         self.account = CoinbaseAccount(oauth2_credentials=TEMP_CREDENTIALS)
 
     @httprettified
+    def test_status_error(self):
+
+        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/account/balance",
+                               body='''{"error": "Invalid api_key"}''',
+                               content_type='text/json',
+                               status=401)
+
+        try:
+            self.account.balance
+        except CoinbaseError as e:
+            e.error.should.equal("Invalid api_key")
+        except Exception:
+            assert False
+
+    @httprettified
+    def test_success_false(self):
+        # Success is added when posting, putting or deleting
+        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/account/balance",
+                               body='''{"success": false, "errors":["Error 1","Error 2"]}''',
+                               content_type='text/json')
+
+        try:
+            self.account.balance
+        except CoinbaseError as e:
+            e.error.should.equal(["Error 1", "Error 2"])
+        except Exception:
+            assert False
+
+    @httprettified
     def test_retrieve_balance(self):
 
         HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/account/balance",
@@ -54,10 +83,6 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         this(float(self.account.balance)).should.equal(0.0)
         this(self.account.balance.currency).should.equal('BTC')
-
-        #TODO:  Switch to decimals
-        #this(self.account.balance).should.equal(CoinbaseAmount('0.00000000', 'USD'))
-        #this(self.account.balance.currency).should.equal(CoinbaseAmount('0.00000000', 'USD').currency)
 
     @httprettified
     def test_receive_addresses(self):
@@ -83,7 +108,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
                                content_type='text/json')
 
         buy_price_1 = self.account.buy_price(1)
-        this(buy_price_1).should.be.an(Decimal)
+        this(buy_price_1).should.be.a(Decimal)
         this(buy_price_1).should.be.lower_than(100)
         this(buy_price_1.currency).should.equal('USD')
 
@@ -105,7 +130,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
                                content_type='text/json')
 
         sell_price_1 = self.account.sell_price(1)
-        this(sell_price_1).should.be.an(Decimal)
+        this(sell_price_1).should.be.a(Decimal)
         this(sell_price_1).should.be.lower_than(100)
         this(sell_price_1.currency).should.equal('USD')
 
@@ -165,7 +190,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         transaction_list = self.account.transactions()
 
-        this(transaction_list).should.be.an(list)
+        this(transaction_list).should.be.a(list)
 
     @httprettified
     def test_getting_transaction(self):
@@ -238,7 +263,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
                                content_type='text/json')
 
         orders = self.account.orders()
-        this(orders).should.be.an(list)
+        this(orders).should.be.a(list)
         this(orders[0].order_id).should.equal("A7C52JQT")
 
     @httprettified
@@ -257,6 +282,4 @@ class CoinBaseLibraryTests(unittest.TestCase):
         this(order.transaction.transaction_id).should.equal("513eb768f12a9cf27400000b")
 
 if __name__ == '__main__':
-    logging.basicConfig( stream=sys.stderr )
-    logging.getLogger( "SomeTest.testSomething" ).setLevel( logging.DEBUG )
     unittest.main()
