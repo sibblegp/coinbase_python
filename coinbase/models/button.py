@@ -10,8 +10,10 @@ class CoinbaseButton(object):
         # so we map them together
         if 'id' in button:
             self.button_id = button['id']
-        if 'code' in button:
+        elif 'code' in button:
             self.button_id = button['code']
+        else:
+            self.button_id = None
         self.code = self.button_id
 
         self.name = button['name']
