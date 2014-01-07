@@ -6,7 +6,7 @@ class CoinbaseError(BaseException):
         self.error = errorList
 
     def __unicode__(self):
-        return 'CoinbaseError: {}'.format(unicode(self.error))
+        return unicode(self.error)
 
     def __str__(self):
-        return 'CoinbaseError: {}'.format(str(self.error))
+        return str(self.error)
