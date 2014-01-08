@@ -225,7 +225,7 @@ class CoinbaseAccount(object):
         :param qty: Quantity of BitCoin to price
         :return: CoinbaseAmount with currency attribute
         """
-        response_parsed = self._get('/prices/buy', data=json.dumps({"qty": qty}))
+        response_parsed = self._get('/prices/buy', params={"qty": qty})
         return CoinbaseAmount(response_parsed['amount'], response_parsed['currency'])
 
     def sell_price(self, qty=1):
@@ -234,7 +234,7 @@ class CoinbaseAccount(object):
         :param qty: Quantity of BitCoin to price
         :return: CoinbaseAmount with currency attribute
         """
-        response_parsed = self._get('/prices/sell', data=json.dumps({"qty": qty}))
+        response_parsed = self._get('/prices/sell', params={"qty": qty})
         return CoinbaseAmount(response_parsed['amount'], response_parsed['currency'])
 
     def buy_btc(self, qty, pricevaries=False):
