@@ -474,6 +474,7 @@ class CoinbaseAccount(object):
             "button": {
                 "name": name,
                 "price": str(price),
+                "price_string": str(price),
                 "currency": currency,
                 "type": type,
                 "style": style,
