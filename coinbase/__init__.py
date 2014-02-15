@@ -476,6 +476,7 @@ class CoinbaseAccount(object):
                 "price": str(price),
                 "price_string": str(price),
                 "currency": currency,
+                "price_currency_iso": currency,
                 "type": type,
                 "style": style,
                 "text": text,
