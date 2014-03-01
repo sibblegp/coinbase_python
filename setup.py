@@ -25,5 +25,9 @@ setup(
         'httplib2>=0.8',
         'requests>=1.1.0',
         'oauth2client>=1.1'
-        ]
+        ],
+    tests_require=[
+        'sure>=1.2.5',
+        'httpretty>=0.8.0',
+        ],
 )
