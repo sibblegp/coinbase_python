@@ -114,7 +114,7 @@ class CoinbaseAccount(object):
             else:
                 print "Oauth access token must be a string"
         else:
-            print "You must pass either an api_key or oauth_credentials"
+            print "You must pass either an api_key, oauth_credentials, or oauth_access_token."
 
     def _check_oauth_expired(self):
         """
