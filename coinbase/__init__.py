@@ -315,7 +315,7 @@ class CoinbaseAccount(object):
 
         return CoinbaseTransaction(response_parsed['transaction'])
 
-    def send(self, to_address, amount, notes='', currency='BTC'):
+    def send(self, to_address, amount, notes='', currency='BTC', transaction_params=dict()):
         """
         Send BitCoin from this account to either an email address or a BTC address
         :param to_address: Email or BTC address to where coin should be sent
@@ -345,11 +345,11 @@ class CoinbaseAccount(object):
                 }
             }
 
+        request_data['transaction'].update(transaction_params)
         response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
         response_parsed = response.json()
-
         if response_parsed['success'] == False:
-            raise RuntimeError('Transaction Failed')
+            raise RuntimeError('Transaction Failed: %s' % response_parsed.get('errors', 'no errors returned'))
 
         return CoinbaseTransaction(response_parsed['transaction'])
 
