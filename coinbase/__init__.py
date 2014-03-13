@@ -499,7 +499,7 @@ class CoinbaseAccount(object):
         }
         if callback_url is not None:
             request_data['button']['callback_url'] = callback_url
-        request_data.update(kwargs)
+        request_data['button'].update(kwargs)
         response = self.session.post(url=url, data=json.dumps(request_data),
                                      params=self.global_request_params)
         resp_data = response.json()
