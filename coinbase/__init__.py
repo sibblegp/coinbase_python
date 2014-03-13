@@ -40,7 +40,11 @@ import httplib2
 import json
 import os
 import inspect
-import copy
+from urllib import urlencode
+import hashlib
+import hmac
+import time
+
 
 from .config import COINBASE_ENDPOINT, COINBASE_ITEMS_PER_PAGE
 from .models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer, CoinbaseError, CoinbaseButton, CoinbaseOrder
@@ -55,7 +59,7 @@ class CoinbaseAccount(object):
 
     def __init__(self,
                  oauth2_credentials=None,
-                 api_key=None):
+                 api_key=None, api_secret=None):
         """
 
         :param oauth2_credentials: JSON representation of Coinbase oauth2 credentials
@@ -94,18 +98,15 @@ class CoinbaseAccount(object):
             #Set our request parameters to be empty
             self.global_request_params = {}
 
-        elif api_key:
-            if type(api_key) is str:
-
+        elif api_key and api_secret:
+            if type(api_key) is str and type(api_secret) is str:
                 #Set our API Key
                 self.api_key = api_key
-
-                #Set our global_request_params
-                self.global_request_params = {'api_key':api_key}
+                self.api_secret = api_secret
             else:
-                print "Your api_key must be a string"
+                print "Your api_key and api_secret must be strings"
         else:
-            print "You must pass either an api_key or oauth_credentials"
+            print "You must pass either api_key and api_secret or oauth_credentials"
 
     def _check_oauth_expired(self):
         """
@@ -162,14 +163,23 @@ class CoinbaseAccount(object):
     _delete = lambda self, url, data=None, params=None: self.make_request(self.session.delete, url, data, params)
 
     def make_request(self, request_func, url, data=None, params=None):
-        if params:
-            # We don't want to change this object, it is passed by reference
-            params = copy.copy(params)
-            params.update(self.global_request_params)
-        else:
-            params = self.global_request_params
+        # We need body as a string to compute the hmac signature
+        body = json.dumps(data) if data else ''
+        # We also need the full url, so we urlencode the params here
+        url = COINBASE_ENDPOINT + url + ('?' + urlencode(params) if params else '')
 
-        response = request_func(COINBASE_ENDPOINT + url, data=data, params=params)
+        if hasattr(self, 'api_key'):
+            nonce = str(int(time.time() * 1e6))
+
+            message = nonce + url + body
+            signature = hmac.new(self.api_secret, message, hashlib.sha256).hexdigest()
+            self.session.headers.update({
+                'ACCESS_KEY': self.api_key,
+                'ACCESS_SIGNATURE': signature,
+                'ACCESS_NONCE': nonce
+            })
+
+        response = request_func(url, data=body)
         response_parsed = response.json()
 
         if response.status_code != 200:

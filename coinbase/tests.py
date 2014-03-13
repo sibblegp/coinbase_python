@@ -29,7 +29,8 @@ class CoinBaseAmountTests(unittest.TestCase):
 class CoinBaseAPIKeyTests(unittest.TestCase):
 
     def setUp(self):
-        self.account = CoinbaseAccount(api_key='f64223978e5fd99d07cded069db2189a38c17142fee35625f6ab3635585f61ab')
+        self.account = CoinbaseAccount(api_key='f64223978e5fd99d07cded069db2189a38c17142fee35625f6ab3635585f61ab',
+                                       api_secret='made up string')
 
     @httprettified
     def test_api_key_balance(self):
