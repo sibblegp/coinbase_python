@@ -42,10 +42,17 @@ import os
 import inspect
 
 #TODO: Switch to decimals from floats
-#from decimal import Decimal
+from decimal import Decimal
 
+import coinbase
 from coinbase.config import COINBASE_ENDPOINT
 from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer, CoinbaseError, CoinbasePaymentButton
+
+
+def exchange_rates():
+    url = 'https://coinbase.com/api/v1/currencies/exchange_rates'
+    rates = json.loads(requests.get(url).content)
+    return dict(((k, Decimal(v)) for k, v in rates.iteritems()))
 
 
 class CoinbaseAccount(object):
@@ -511,3 +518,11 @@ class CoinbaseAccount(object):
                 error_msg += '.'
             raise RuntimeError(error_msg)
         return CoinbasePaymentButton(**resp_data['button'])
+
+
+# For convenience, also add the functions that don't require auth credentials
+# to the CoinbaseAccount class.
+for method_name in ['exchange_rates']:
+    def new_method(self, *args, **kwargs):
+        return getattr(coinbase, method_name)(*args, **kwargs)
+    setattr(CoinbaseAccount, method_name, new_method)
