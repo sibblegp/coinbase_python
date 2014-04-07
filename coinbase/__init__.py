@@ -57,12 +57,19 @@ class CoinbaseAccount(object):
     no auth (for unauthenticated resources only)
     """
 
-    def __init__(self, oauth2_credentials=None, api_key=None):
+    def __init__(self, oauth2_credentials=None, api_key=None,
+                 allow_transfers=False):
         """
         :param oauth2_credentials: JSON representation of Coinbase oauth2
                 credentials
         :param api_key:  Coinbase API key
+        :param allow_transfers: Whether to allow sending money.
+                Defaults to False for safety, because most of the time
+                during testing you probably don't actually want to send
+                money around
         """
+
+        self.allow_transfers = allow_transfers
 
         #Set up our requests session
         self.session = requests.session()
@@ -105,6 +112,10 @@ class CoinbaseAccount(object):
 
             #Set our global_request_params
             self.global_request_params = {'api_key': api_key}
+
+    def _require_allow_transfers(self):
+        if not self.allow_transfers:
+            raise Exception('Transfers are not enabled')
 
     def _require_authentication(self):
         if not self.authenticated:
@@ -236,6 +247,7 @@ class CoinbaseAccount(object):
                  CoinbaseError with the error list received from Coinbase on
                  failure
         """
+        self._require_allow_transfers()
         self._require_authentication()
 
         url = COINBASE_ENDPOINT + '/buys'
@@ -260,6 +272,7 @@ class CoinbaseAccount(object):
                  CoinbaseError with the error list received from Coinbase on
                  failure
         """
+        self._require_allow_transfers()
         self._require_authentication()
 
         url = COINBASE_ENDPOINT + '/sells'
@@ -283,6 +296,7 @@ class CoinbaseAccount(object):
         :param currency: Currency of the request
         :return: CoinbaseTransaction with status and details
         """
+        self._require_allow_transfers()
         self._require_authentication()
 
         url = COINBASE_ENDPOINT + '/transactions/request_money'
@@ -323,6 +337,7 @@ class CoinbaseAccount(object):
         :param currency: Currency to send
         :return: CoinbaseTransaction with status and details
         """
+        self._require_allow_transfers()
         self._require_authentication()
 
         url = COINBASE_ENDPOINT + '/transactions/send_money'

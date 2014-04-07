@@ -23,7 +23,10 @@ class CoinBaseAmountTests(unittest.TestCase):
 class CoinBaseAPIKeyTests(unittest.TestCase):
 
     def setUp(self):
-        self.account = CoinbaseAccount(api_key='f64223978e5fd99d07cded069db2189a38c17142fee35625f6ab3635585f61ab')
+        self.account = CoinbaseAccount(
+            api_key='f64223978e5fd99d07cded069db2189a38c17142fee35625f6ab3635585f61ab',
+            allow_transfers=True,
+        )
 
     @httprettified
     def test_api_key_balance(self):
@@ -37,7 +40,10 @@ class CoinBaseAPIKeyTests(unittest.TestCase):
 class CoinBaseLibraryTests(unittest.TestCase):
 
     def setUp(self):
-        self.account = CoinbaseAccount(oauth2_credentials=TEMP_CREDENTIALS)
+        self.account = CoinbaseAccount(
+            oauth2_credentials=TEMP_CREDENTIALS,
+            allow_transfers=True,
+        )
 
     @httprettified
     def test_retrieve_balance(self):
