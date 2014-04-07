@@ -4,6 +4,7 @@ import sure
 from sure import it, this, those, these
 import unittest
 from httpretty import HTTPretty, httprettified
+from decimal import Decimal
 
 from coinbase import CoinbaseAccount
 from models import CoinbaseAmount
@@ -197,3 +198,24 @@ class CoinBaseLibraryTests(unittest.TestCase):
         this(button.code).should.equal('b123456783q812e381cd9d39a5783277')
         this(button.name).should.equal('Test Button')
         this(button.price['cents']).should.equal(2000)
+
+    @httprettified
+    def test_exchange_rates(self):
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            "https://coinbase.com/api/v1/currencies/exchange_rates",
+            body='{"gbp_to_usd":"1.648093","usd_to_gbp":"0.606762",'
+                 '"btc_to_usd":"460.074131","usd_to_btc":"0.002174",'
+                 '"gbp_to_btc":"0.003583","btc_to_gbp":"279.1555"}',
+            content_type='text/json',
+        )
+        rates = self.account.exchange_rates()
+        this(rates).should.be.an(dict)
+        this(rates).should.be.equal({
+            'gbp_to_usd': Decimal('1.648093'),
+            'usd_to_gbp': Decimal('0.606762'),
+            'btc_to_usd': Decimal('460.074131'),
+            'usd_to_btc': Decimal('0.002174'),
+            'gbp_to_btc': Decimal('0.003583'),
+            'btc_to_gbp': Decimal('279.1555')
+        })
