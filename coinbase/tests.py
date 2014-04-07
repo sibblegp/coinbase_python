@@ -209,7 +209,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
                  '"gbp_to_btc":"0.003583","btc_to_gbp":"279.1555"}',
             content_type='text/json',
         )
-        rates = self.account.exchange_rates()
+        rates = self.account.exchange_rates
         this(rates).should.be.an(dict)
         this(rates).should.be.equal({
             'gbp_to_usd': Decimal('1.648093'),

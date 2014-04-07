@@ -537,6 +537,7 @@ class CoinbaseAccount(object):
             raise RuntimeError(error_msg)
         return CoinbasePaymentButton(**resp_data['button'])
 
+    @property
     def exchange_rates(self):
         """
         Retrieve BTC to fiat (and vice versus) exchange rates in various
