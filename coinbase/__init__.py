@@ -243,8 +243,8 @@ class CoinbaseAccount(object):
         :param pricevaries: Boolean value that indicates whether or not the
                 transaction should be processed if Coinbase cannot gaurentee
                 the current price.
-        :return: CoinbaseTransfer with all transfer details on success or 
-                 CoinbaseError with the error list received from Coinbase on
+        :return: CoinbaseTransfer with all transfer details on success
+        :raise: CoinbaseError with the error list received from Coinbase on
                  failure
         """
         self._require_allow_transfers()
@@ -258,8 +258,9 @@ class CoinbaseAccount(object):
         response = self.session.post(url=url, data=json.dumps(request_data),
                                      params=self.global_request_params)
         response_parsed = response.json()
-        if not response_parsed['success']:
-            return CoinbaseError(response_parsed['errors'])
+        if not response_parsed.get('success'):
+            raise CoinbaseError('Failed to buy btc.',
+                                response_parsed.get('errors'))
 
         return CoinbaseTransfer(response_parsed['transfer'])
 
@@ -268,8 +269,8 @@ class CoinbaseAccount(object):
         """
         Sell BitCoin to Coinbase for USD
         :param qty: BitCoin quantity to be sold
-        :return: CoinbaseTransfer with all transfer details on success or 
-                 CoinbaseError with the error list received from Coinbase on
+        :return: CoinbaseTransfer with all transfer details on success
+        :raise: CoinbaseError with the error list received from Coinbase on
                  failure
         """
         self._require_allow_transfers()
@@ -282,8 +283,9 @@ class CoinbaseAccount(object):
         response = self.session.post(url=url, data=json.dumps(request_data),
                                      params=self.global_request_params)
         response_parsed = response.json()
-        if not response_parsed['success']:
-            return CoinbaseError(response_parsed['errors'])
+        if not response_parsed.get('success'):
+            raise CoinbaseError('Failed to sell btc.',
+                                response_parsed.get('errors'))
 
         return CoinbaseTransfer(response_parsed['transfer'])
 
@@ -295,6 +297,8 @@ class CoinbaseAccount(object):
         :param notes: Notes to include with the request
         :param currency: Currency of the request
         :return: CoinbaseTransaction with status and details
+        :raise: CoinbaseError with the error list received from Coinbase on
+                 failure
         """
         self._require_allow_transfers()
         self._require_authentication()
@@ -322,8 +326,9 @@ class CoinbaseAccount(object):
         response = self.session.post(url=url, data=json.dumps(request_data),
                                      params=self.global_request_params)
         response_parsed = response.json()
-        if not response_parsed['success']:
-            return CoinbaseError(response_parsed['errors'])
+        if not response_parsed.get('success'):
+            raise CoinbaseError('Failed to request btc.',
+                                response_parsed.get('errors'))
 
         return CoinbaseTransaction(response_parsed['transaction'])
 
@@ -336,6 +341,8 @@ class CoinbaseAccount(object):
         :param notes: Notes to be included with transaction
         :param currency: Currency to send
         :return: CoinbaseTransaction with status and details
+        :raise: CoinbaseError with the error list received from Coinbase on
+                 failure
         """
         self._require_allow_transfers()
         self._require_authentication()
@@ -365,8 +372,9 @@ class CoinbaseAccount(object):
                                      params=self.global_request_params)
         response_parsed = response.json()
 
-        if response_parsed['success'] == False:
-            return CoinbaseError(response_parsed['errors'])
+        if not response_parsed.get('success'):
+            raise CoinbaseError('Failed to send btc.',
+                                response_parsed.get('errors'))
 
         return CoinbaseTransaction(response_parsed['transaction'])
 
@@ -444,7 +452,7 @@ class CoinbaseAccount(object):
         response = self.session.get(url, params=self.global_request_params)
         results = response.json()
 
-        if results.get('success', True) == False:
+        if not results.get('success', True):
             pass
             #TODO:  Add error handling
 
@@ -543,7 +551,7 @@ class CoinbaseAccount(object):
         response = self.session.post(url=url, data=json.dumps(request_data),
                                      params=self.global_request_params)
         resp_data = response.json()
-        if not resp_data['success'] or 'button' not in resp_data:
+        if not resp_data.get('success') or 'button' not in resp_data:
             error_msg = 'Error creating button'
             if 'errors' in resp_data:
                 error_msg += ':' + u'\n'.join(resp_data)

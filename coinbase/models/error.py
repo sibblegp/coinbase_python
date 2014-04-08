@@ -1,8 +1,7 @@
 __author__ = 'kroberts'
 
 
+class CoinbaseError(Exception):
 
-class CoinbaseError(object):
-
-    def __init__(self, errorList):
-        self.error = errorList
+    def __init__(self, message, errors = None):
+        Exception.__init__(self, ' '.join([message] + (errors or [])))
