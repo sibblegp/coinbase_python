@@ -366,7 +366,7 @@ class CoinbaseAccount(object):
         response_parsed = response.json()
 
         if response_parsed['success'] == False:
-            raise RuntimeError('Transaction Failed')
+            return CoinbaseError(response_parsed['errors'])
 
         return CoinbaseTransaction(response_parsed['transaction'])
 
