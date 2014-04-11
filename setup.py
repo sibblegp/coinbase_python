@@ -4,6 +4,7 @@ setup(
     name='coinbase',
     version='0.2.0',
     packages=['coinbase', 'coinbase.models'],
+    package_data={'coinbase': ['ca_certs.txt']},
     url='https://github.com/sibblegp/coinbase_python',
     license='MIT',
     author='George Sibble',
