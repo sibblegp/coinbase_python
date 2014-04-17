@@ -1,5 +1,6 @@
 __author__ = 'gsibble'
 
+
 class CoinbaseAmount(float):
 
     def __new__(self, amount, currency):

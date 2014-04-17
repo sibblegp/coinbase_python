@@ -2,6 +2,7 @@ __author__ = 'pmb6tz'
 
 from amount import CoinbaseAmount
 
+
 class CoinbaseTransfer(object):
 
     def __init__(self, transfer):

@@ -1,5 +1,6 @@
 __author__ = 'mhluongo'
 
+
 class CoinbasePaymentButton(object):
 
     def __init__(self, *args, **kwargs):

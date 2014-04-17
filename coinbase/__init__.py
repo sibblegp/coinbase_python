@@ -264,7 +264,6 @@ class CoinbaseAccount(object):
 
         return CoinbaseTransfer(response_parsed['transfer'])
 
-
     def sell_btc(self, qty):
         """
         Sell BitCoin to Coinbase for USD

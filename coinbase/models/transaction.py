@@ -3,6 +3,7 @@ __author__ = 'gsibble'
 from amount import CoinbaseAmount
 from contact import CoinbaseContact
 
+
 class CoinbaseTransaction(object):
 
     def __init__(self, transaction):
@@ -41,8 +42,8 @@ class CoinbaseTransaction(object):
             recipient_email = transaction['recipient'].get('email', None)
 
             self.recipient = CoinbaseContact(contact_id=recipient_id,
-                                          name=recipient_name,
-                                          email=recipient_email)
+                                             name=recipient_name,
+                                             email=recipient_email)
             self.recipient_address = None
             self.recipient_type = 'CoinBase'
 
@@ -66,4 +67,3 @@ class CoinbaseTransaction(object):
     def resend(self):
         pass
         #TODO:  Resend the transaction email if possible
-

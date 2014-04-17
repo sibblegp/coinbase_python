@@ -1,5 +1,6 @@
 __author__ = 'gsibble'
 
+
 class CoinbaseUser(object):
 
     def __init__(self,
