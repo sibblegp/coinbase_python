@@ -22,9 +22,12 @@ Automatic installation using [pip](http://pypi.python.org/pypi):
 
 ```python
 from coinbase import CoinbaseAccount
-account = CoinbaseAccount(JSON_OAUTH2_TOKEN)
-transaction = account.send('gsibble@gmail.com', 1.0)
-print transaction.status
+
+print(CoinbaseAccount().exchange_rates['usd_to_btc'])
+
+account = CoinbaseAccount(oauth2_credentials=JSON_OAUTH2_TOKEN)
+transaction = account.send('recipient@example.com', 1.0)
+print(transaction.status)
 ```
 
 ## Examples / Quickstart
