@@ -58,15 +58,15 @@ class CoinbaseAccount(object):
     """
 
     def __init__(self, oauth2_credentials=None, api_key=None,
-                 allow_transfers=False):
+                 allow_transfers=True):
         """
         :param oauth2_credentials: JSON representation of Coinbase oauth2
                 credentials
         :param api_key:  Coinbase API key
         :param allow_transfers: Whether to allow sending money.
-                Defaults to False for safety, because most of the time
-                during testing you probably don't actually want to send
-                money around
+                You can set this to False for safety while in a development
+                environment if you want to more sure you don't actually send
+                any money around.
         """
 
         self.allow_transfers = allow_transfers
