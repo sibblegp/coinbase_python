@@ -241,7 +241,7 @@ class CoinbaseAccount(object):
         Buy BitCoin from Coinbase for USD
         :param qty: BitCoin quantity to be bought
         :param pricevaries: Boolean value that indicates whether or not the
-                transaction should be processed if Coinbase cannot gaurentee
+                transaction should be processed if Coinbase cannot guarantee
                 the current price.
         :return: CoinbaseTransfer with all transfer details on success
         :raise: CoinbaseError with the error list received from Coinbase on
