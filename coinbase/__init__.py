@@ -45,7 +45,7 @@ import inspect
 #from decimal import Decimal
 
 from coinbase.config import COINBASE_ENDPOINT
-from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer, CoinbaseError
+from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer, CoinbaseError, TransactionError
 
 
 class CoinbaseAccount(object):
@@ -342,7 +342,10 @@ class CoinbaseAccount(object):
         response_parsed = response.json()
 
         if response_parsed['success'] == False:
-            raise RuntimeError('Transaction Failed')
+            errors = response_parsed.get('errors', [])
+            error_string = ' '.join(errors)
+            raise TransactionError('Transaction failed: %s' %
+                                   error_string, error_list=errors)
 
         return CoinbaseTransaction(response_parsed['transaction'])
 
