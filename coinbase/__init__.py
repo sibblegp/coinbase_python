@@ -45,7 +45,7 @@ import inspect
 #from decimal import Decimal
 
 from coinbase.config import COINBASE_ENDPOINT
-from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer, CoinbaseError
+from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer, CoinbaseError, CoinbasePaymentButton
 
 
 class CoinbaseAccount(object):
@@ -465,4 +465,49 @@ class CoinbaseAccount(object):
         return response.json()['address']
 
 
+    def create_button(self, name, price, price_currency='BTC',
+                      button_type='buy_now', callback_url=None,
+                      **kwargs):
+        """
+        Create a new payment button, page, or iframe.
 
+        Some required parameters are documented, but the rest are supported
+        as keyword-arguments.
+        
+        See https://coinbase.com/api/doc/1.0/buttons/create.html for details.
+
+        :param name: The name of the item to be purchased, donated for, or
+        subscribed.
+        :param price: The price, in whatever currency specified. Preferably a
+        string or Decimal.
+        :param price_currency: The ISO currency in which the price is listed.
+        Eg, BTC or USD.
+        :param button_type: Choices are 'buy_now', 'donation', and
+        'subscription'
+        :param callback_url: The URL to receive instant payment notifications
+
+        :return: The embeddable HTML string
+        """
+        url = COINBASE_ENDPOINT + '/buttons'
+        request_data = {
+            "button": {
+                "name":name,
+                "price_string":unicode(price),
+                "price_currency_iso":price_currency,
+                "button_type":button_type
+            }
+        }
+        if callback_url is not None:
+            request_data['button']['callback_url'] = callback_url
+        request_data['button'].update(kwargs)
+        response = self.session.post(url=url, data=json.dumps(request_data),
+                                     params=self.global_request_params)
+        resp_data = response.json()
+        if not resp_data['success'] or 'button' not in resp_data:
+            error_msg = 'Error creating button'
+            if 'errors' in resp_data:
+                error_msg += ':' + u'\n'.join(resp_data)
+            else:
+                error_msg += '.'
+            raise RuntimeError(error_msg)
+        return CoinbasePaymentButton(**resp_data['button'])
