@@ -199,13 +199,17 @@ class CoinBaseLibraryTests(unittest.TestCase):
     @httprettified
     def test_creating_a_button(self):
 
-        HTTPretty.register_uri(HTTPretty.POST, "https://coinbase.com/api/v1/buttons",
-                               body='''{"button": {"style": "buy_now_large", "code": "b123456783q812e381cd9d39a5783277", "name": "Test Button", "info_url": null, "text": "Pay With Bitcoin", "price": {"cents": 2000, "currency_iso": "USD"}, "include_email": false, "custom": "", "cancel_url": null, "auto_redirect": false, "success_url": null, "variable_price": false, "include_address": false, "callback_url": null, "type": "buy_now", "choose_price": false, "description": ""}, "success": true}''',
-                               content_type='text/json')
+        HTTPretty.register_uri(
+            HTTPretty.POST,
+            'https://coinbase.com/api/v1/buttons',
+            body=read('button.json'),
+            content_type='text/json')
 
-        button = self.account.create_button('Test Button', '20.00', 'USD')
+        button = self.account.create_button(
+            name='Test Button',
+            price=CoinbaseAmount('20.00', 'USD'))
 
-        this(button.code).should.equal('b123456783q812e381cd9d39a5783277')
+        this(button.code).should.equal('f68a5c68d0a68679a6c6f569e651d695')
         this(button.name).should.equal('Test Button')
         this(button.price['cents']).should.equal(2000)
 

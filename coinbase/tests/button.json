@@ -1,0 +1,25 @@
+{
+    "button": {
+        "auto_redirect": false,
+        "callback_url": null,
+        "cancel_url": null,
+        "choose_price": false,
+        "code": "f68a5c68d0a68679a6c6f569e651d695",
+        "custom": "",
+        "description": "",
+        "include_address": false,
+        "include_email": false,
+        "info_url": null,
+        "name": "Test Button",
+        "price": {
+            "cents": 2000,
+            "currency_iso": "USD"
+        },
+        "style": "buy_now_large",
+        "success_url": null,
+        "text": "Pay With Bitcoin",
+        "type": "buy_now",
+        "variable_price": false
+    },
+    "success": true
+}
