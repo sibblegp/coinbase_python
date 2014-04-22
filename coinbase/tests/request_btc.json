@@ -1,0 +1,25 @@
+{
+    "success": true,
+    "transaction": {
+        "amount": {
+            "amount": "1.00000000",
+            "currency": "BTC"
+        },
+        "created_at": "2013-03-23T17:43:35-07:00",
+        "hsh": null,
+        "id": "96ab6e96f69a69c6d6960173",
+        "notes": "Testing",
+        "recipient": {
+            "email": "bob@example.com",
+            "id": "65ab697e5d67a58675675d31",
+            "name": "bob@example.com"
+        },
+        "request": true,
+        "sender": {
+            "email": "alice@example.com",
+            "id": "956df569c9ae67598a6c56e9",
+            "name": "alice@example.com"
+        },
+        "status": "pending"
+    }
+}

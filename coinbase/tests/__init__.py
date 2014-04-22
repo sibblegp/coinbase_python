@@ -125,41 +125,57 @@ class CoinBaseLibraryTests(unittest.TestCase):
     @httprettified
     def test_request_bitcoin(self):
 
-        HTTPretty.register_uri(HTTPretty.POST, "https://coinbase.com/api/v1/transactions/request_money",
-                               body='''{"success":true,"transaction":{"id":"514e4c37802e1bf69100000e","created_at":"2013-03-23T17:43:35-07:00","hsh":null,"notes":"Testing","amount":{"amount":"1.00000000","currency":"BTC"},"request":true,"status":"pending","sender":{"id":"514e4c1c802e1bef9800001e","email":"george@atlasr.com","name":"george@atlasr.com"},"recipient":{"id":"509e01ca12838e0200000212","email":"gsibble@gmail.com","name":"gsibble@gmail.com"}}}''',
-                               content_type='text/json')
+        HTTPretty.register_uri(
+            HTTPretty.POST,
+            'https://coinbase.com/api/v1/transactions/request_money',
+            body=read('request_btc.json'),
+            content_type='text/json')
 
-        new_request = self.account.request('george@atlasr.com', 1, 'Testing')
+        request = self.account.request(from_email='alice@example.com',
+                                       amount='1',
+                                       currency='BTC',
+                                       notes='Testing')
 
-        this(new_request.amount).should.equal(CoinbaseAmount('1', 'BTC'))
-        this(new_request.request).should.equal(True)
-        this(new_request.sender.email).should.equal('george@atlasr.com')
-        this(new_request.recipient.email).should.equal('gsibble@gmail.com')
-        this(new_request.notes).should.equal('Testing')
+        this(request.amount).should.equal(CoinbaseAmount('1', 'BTC'))
+        this(request.request).should.equal(True)
+        this(request.sender.email).should.equal('alice@example.com')
+        this(request.recipient.email).should.equal('bob@example.com')
+        this(request.notes).should.equal('Testing')
 
     @httprettified
-    def test_send_bitcoin(self):
+    def test_send_bitcoin_to_btc_address(self):
 
-        HTTPretty.register_uri(HTTPretty.POST, "https://coinbase.com/api/v1/transactions/send_money",
-                               body='''{"success":true,"transaction":{"id":"5158b227802669269c000009","created_at":"2013-03-31T15:01:11-07:00","hsh":null,"notes":"","amount":{"amount":"-0.10000000","currency":"BTC"},"request":false,"status":"pending","sender":{"id":"509e01ca12838e0200000212","email":"gsibble@gmail.com","name":"gsibble@gmail.com"},"recipient_address":"15yHmnB5vY68sXpAU9pR71rnyPAGLLWeRP"}}    ''',
-                               content_type='text/json')
+        HTTPretty.register_uri(
+            HTTPretty.POST,
+            'https://coinbase.com/api/v1/transactions/send_money',
+            body=read('send_to_bitcoin_address.json'),
+            content_type='text/json')
 
-        new_transaction_with_btc_address = self.account.send('15yHmnB5vY68sXpAU9pR71rnyPAGLLWeRP', amount=0.1)
+        tx = self.account.send(to_address='7nregFERfhn8f34FERf8yn8fEGgfe274nv',
+                               amount='0.1',
+                               currency='BTC')
 
-        this(new_transaction_with_btc_address.amount).should.equal(CoinbaseAmount('-0.1', 'BTC'))
-        this(new_transaction_with_btc_address.request).should.equal(False)
-        this(new_transaction_with_btc_address.sender.email).should.equal('gsibble@gmail.com')
-        this(new_transaction_with_btc_address.recipient).should.equal(None)
-        this(new_transaction_with_btc_address.recipient_address).should.equal('15yHmnB5vY68sXpAU9pR71rnyPAGLLWeRP')
+        this(tx.amount).should.equal(CoinbaseAmount(Decimal('-0.1'), 'BTC'))
+        this(tx.request).should.equal(False)
+        this(tx.sender.email).should.equal('alice@example.com')
+        this(tx.recipient).should.equal(None)
+        this(tx.recipient_address).should.equal(
+            '7nregFERfhn8f34FERf8yn8fEGgfe274nv')
 
-        HTTPretty.register_uri(HTTPretty.POST, "https://coinbase.com/api/v1/transactions/send_money",
-                               body='''{"success":true,"transaction":{"id":"5158b2920b974ea4cb000003","created_at":"2013-03-31T15:02:58-07:00","hsh":null,"notes":"","amount":{"amount":"-0.10000000","currency":"BTC"},"request":false,"status":"pending","sender":{"id":"509e01ca12838e0200000212","email":"gsibble@gmail.com","name":"gsibble@gmail.com"},"recipient":{"id":"4efec8d7bedd320001000003","email":"brian@coinbase.com","name":"Brian Armstrong"},"recipient_address":"brian@coinbase.com"}}
-''',
-                               content_type='text/json')
+    @httprettified
+    def test_send_bitcoin_to_email_address(self):
 
-        new_transaction_with_email = self.account.send('brian@coinbase.com', amount=0.1)
+        HTTPretty.register_uri(
+            HTTPretty.POST,
+            'https://coinbase.com/api/v1/transactions/send_money',
+            body=read('send_to_email_address.json'),
+            content_type='text/json')
 
-        this(new_transaction_with_email.recipient.email).should.equal('brian@coinbase.com')
+        tx = self.account.send(to_address='bob@example.com',
+                               amount='0.1',
+                               currency='BTC')
+
+        this(tx.recipient.email).should.equal('bob@example.com')
 
     @httprettified
     def test_transaction_list(self):
