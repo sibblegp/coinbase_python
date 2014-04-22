@@ -71,11 +71,18 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
     @httprettified
     def test_contacts(self):
-        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/contacts",
-                               body='''{"contacts":[{"contact":{"email":"brian@coinbase.com"}}],"total_count":1,"num_pages":1,"current_page":1}''',
-                               content_type='text/json')
 
-        this(self.account.contacts).should.equal([{u'email': u'brian@coinbase.com'}])
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            'https://coinbase.com/api/v1/contacts',
+            body=read('contacts.json'),
+            content_type='text/json')
+
+        this(self.account.contacts).should.equal([
+            {u'email': u'alice@example.com'},
+            {u'email': u'bob@example.com'},
+            {u'email': u'eve@example.com'},
+        ])
 
     @httprettified
     def test_buy_price_1(self):
