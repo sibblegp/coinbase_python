@@ -218,7 +218,6 @@ class CoinbaseAccount(object):
         """
         url = COINBASE_ENDPOINT + '/prices/buy'
         params = {'qty': qty}
-        params.update(self.auth_params)
         response = self.session.get(url, params=params)
         results = response.json()
         return CoinbaseAmount(results['amount'], results['currency'])
@@ -231,7 +230,6 @@ class CoinbaseAccount(object):
         """
         url = COINBASE_ENDPOINT + '/prices/sell'
         params = {'qty': qty}
-        params.update(self.auth_params)
         response = self.session.get(url, params=params)
         results = response.json()
         return CoinbaseAmount(results['amount'], results['currency'])
