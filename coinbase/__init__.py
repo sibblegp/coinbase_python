@@ -104,14 +104,14 @@ class CoinbaseAccount(object):
             self.oauth2_credentials.apply(headers=self.session.headers)
 
             #Set our request parameters to be empty
-            self.global_request_params = {}
+            self.auth_params = {}
 
         elif api_key:
             #Set our API Key
             self.api_key = api_key
 
-            #Set our global_request_params
-            self.global_request_params = {'api_key': api_key}
+            #Set our auth_params
+            self.auth_params = {'api_key': api_key}
 
     def _require_allow_transfers(self):
         if not self.allow_transfers:
@@ -180,7 +180,7 @@ class CoinbaseAccount(object):
         self._require_authentication()
 
         url = COINBASE_ENDPOINT + '/account/balance'
-        response = self.session.get(url, params=self.global_request_params)
+        response = self.session.get(url, params=self.auth_params)
         results = response.json()
         return CoinbaseAmount(results['amount'], results['currency'])
 
@@ -194,7 +194,7 @@ class CoinbaseAccount(object):
         self._require_authentication()
 
         url = COINBASE_ENDPOINT + '/account/receive_address'
-        response = self.session.get(url, params=self.global_request_params)
+        response = self.session.get(url, params=self.auth_params)
         return response.json()['address']
 
     @property
@@ -207,7 +207,7 @@ class CoinbaseAccount(object):
         self._require_authentication()
 
         url = COINBASE_ENDPOINT + '/contacts'
-        response = self.session.get(url, params=self.global_request_params)
+        response = self.session.get(url, params=self.auth_params)
         return [contact['contact'] for contact in response.json()['contacts']]
 
     def buy_price(self, qty=1):
@@ -218,7 +218,7 @@ class CoinbaseAccount(object):
         """
         url = COINBASE_ENDPOINT + '/prices/buy'
         params = {'qty': qty}
-        params.update(self.global_request_params)
+        params.update(self.auth_params)
         response = self.session.get(url, params=params)
         results = response.json()
         return CoinbaseAmount(results['amount'], results['currency'])
@@ -231,7 +231,7 @@ class CoinbaseAccount(object):
         """
         url = COINBASE_ENDPOINT + '/prices/sell'
         params = {'qty': qty}
-        params.update(self.global_request_params)
+        params.update(self.auth_params)
         response = self.session.get(url, params=params)
         results = response.json()
         return CoinbaseAmount(results['amount'], results['currency'])
@@ -256,7 +256,7 @@ class CoinbaseAccount(object):
             "agree_btc_amount_varies": pricevaries
         }
         response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.global_request_params)
+                                     params=self.auth_params)
         response_parsed = response.json()
         if not response_parsed.get('success'):
             raise CoinbaseError('Failed to buy btc.',
@@ -280,7 +280,7 @@ class CoinbaseAccount(object):
             "qty": qty,
         }
         response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.global_request_params)
+                                     params=self.auth_params)
         response_parsed = response.json()
         if not response_parsed.get('success'):
             raise CoinbaseError('Failed to sell btc.',
@@ -323,7 +323,7 @@ class CoinbaseAccount(object):
             }
 
         response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.global_request_params)
+                                     params=self.auth_params)
         response_parsed = response.json()
         if not response_parsed.get('success'):
             raise CoinbaseError('Failed to request btc.',
@@ -368,7 +368,7 @@ class CoinbaseAccount(object):
             }
 
         response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.global_request_params)
+                                     params=self.auth_params)
         response_parsed = response.json()
 
         if not response_parsed.get('success'):
@@ -395,7 +395,7 @@ class CoinbaseAccount(object):
 
             if not reached_final_page:
                 params = {'page': page}
-                params.update(self.global_request_params)
+                params.update(self.auth_params)
                 response = self.session.get(url=url, params=params)
                 parsed_transactions = response.json()
 
@@ -427,7 +427,7 @@ class CoinbaseAccount(object):
 
             if not reached_final_page:
                 params = {'page': page}
-                params.update(self.global_request_params)
+                params.update(self.auth_params)
                 response = self.session.get(url=url, params=params)
                 parsed_transfers = response.json()
 
@@ -448,7 +448,7 @@ class CoinbaseAccount(object):
         self._require_authentication()
 
         url = COINBASE_ENDPOINT + '/transactions/' + str(transaction_id)
-        response = self.session.get(url, params=self.global_request_params)
+        response = self.session.get(url, params=self.auth_params)
         results = response.json()
 
         if not results.get('success', True):
@@ -466,7 +466,7 @@ class CoinbaseAccount(object):
         self._require_authentication()
 
         url = COINBASE_ENDPOINT + '/users'
-        response = self.session.get(url, params=self.global_request_params)
+        response = self.session.get(url, params=self.auth_params)
         results = response.json()
 
         user_details = results['users'][0]['user']
@@ -507,7 +507,7 @@ class CoinbaseAccount(object):
             }
         }
         response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.global_request_params)
+                                     params=self.auth_params)
         return response.json()['address']
 
     def create_button(self, name, price, price_currency='BTC',
@@ -548,7 +548,7 @@ class CoinbaseAccount(object):
             request_data['button']['callback_url'] = callback_url
         request_data['button'].update(kwargs)
         response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.global_request_params)
+                                     params=self.auth_params)
         resp_data = response.json()
         if not resp_data.get('success') or 'button' not in resp_data:
             error_msg = 'Error creating button'
