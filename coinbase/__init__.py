@@ -41,7 +41,6 @@ import httplib2
 import json
 import os
 
-#TODO: Switch to decimals from floats
 from decimal import Decimal
 
 from coinbase.config import COINBASE_ENDPOINT
@@ -175,14 +174,14 @@ class CoinbaseAccount(object):
         """
         Retrieve coinbase's account balance
 
-        :return: CoinbaseAmount (float) with currency attribute
+        :return: CoinbaseAmount with currency attribute
         """
         self._require_authentication()
 
         url = COINBASE_ENDPOINT + '/account/balance'
         response = self.session.get(url, params=self.auth_params)
         results = response.json()
-        return CoinbaseAmount(results['amount'], results['currency'])
+        return CoinbaseAmount.from_coinbase_dict(results)
 
     @property
     def receive_address(self):
@@ -214,25 +213,25 @@ class CoinbaseAccount(object):
         """
         Return the buy price of BitCoin in USD
         :param qty: Quantity of BitCoin to price
-        :return: CoinbaseAmount (float) with currency attribute
+        :return: CoinbaseAmount with currency attribute
         """
         url = COINBASE_ENDPOINT + '/prices/buy'
         params = {'qty': qty}
         response = self.session.get(url, params=params)
         results = response.json()
-        return CoinbaseAmount(results['amount'], results['currency'])
+        return CoinbaseAmount.from_coinbase_dict(results)
 
     def sell_price(self, qty=1):
         """
         Return the sell price of BitCoin in USD
         :param qty: Quantity of BitCoin to price
-        :return: CoinbaseAmount (float) with currency attribute
+        :return: CoinbaseAmount with currency attribute
         """
         url = COINBASE_ENDPOINT + '/prices/sell'
         params = {'qty': qty}
         response = self.session.get(url, params=params)
         results = response.json()
-        return CoinbaseAmount(results['amount'], results['currency'])
+        return CoinbaseAmount.from_coinbase_dict(results)
 
     def buy_btc(self, qty, pricevaries=False):
         """
@@ -470,12 +469,9 @@ class CoinbaseAccount(object):
         user_details = results['users'][0]['user']
 
         #Convert our balance and limits to proper amounts
-        balance = CoinbaseAmount(user_details['balance']['amount'],
-                                 user_details['balance']['currency'])
-        buy_limit = CoinbaseAmount(user_details['buy_limit']['amount'],
-                                   user_details['buy_limit']['currency'])
-        sell_limit = CoinbaseAmount(user_details['sell_limit']['amount'],
-                                    user_details['sell_limit']['currency'])
+        balance = CoinbaseAmount.from_coinbase_dict(user_details['balance'])
+        buy_limit = CoinbaseAmount.from_coinbase_dict(user_details['buy_limit'])
+        sell_limit = CoinbaseAmount.from_coinbase_dict(user_details['sell_limit'])
 
         user = CoinbaseUser(user_id=user_details['id'],
                             name=user_details['name'],
