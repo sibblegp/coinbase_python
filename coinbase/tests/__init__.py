@@ -9,8 +9,6 @@ import os.path
 
 from coinbase import CoinbaseAccount, CoinbaseAmount
 
-TEMP_CREDENTIALS = '''{"_module": "oauth2client.client", "token_expiry": "2014-03-31T23:27:40Z", "access_token": "c15a9f84e471db9b0b8fb94f3cb83f08867b4e00cb823f49ead771e928af5c79", "token_uri": "https://www.coinbase.com/oauth/token", "invalid": false, "token_response": {"access_token": "c15a9f84e471db9b0b8fb94f3cb83f08867b4e00cb823f49ead771e928af5c79", "token_type": "bearer", "expires_in": 7200, "refresh_token": "90cb2424ddc39f6668da41a7b46dfd5a729ac9030e19e05fd95bb1880ad07e65", "scope": "all"}, "client_id": "2df06cb383f4ffffac20e257244708c78a1150d128f37d420f11fdc069a914fc", "id_token": null, "client_secret": "7caedd79052d7e29aa0f2700980247e499ce85381e70e4a44de0c08f25bded8a", "revoke_uri": "https://accounts.google.com/o/oauth2/revoke", "_class": "OAuth2Credentials", "refresh_token": "90cb2424ddc39f6668da41a7b46dfd5a729ac9030e19e05fd95bb1880ad07e65", "user_agent": null}'''
-
 
 def read(filename):
     with open(os.path.join(os.path.dirname(__file__), filename)) as f:
@@ -49,9 +47,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
     def setUp(self):
         self.account = CoinbaseAccount(
-            oauth2_credentials=TEMP_CREDENTIALS,
-            allow_transfers=True,
-        )
+            oauth2_credentials=read('oauth2_credentials.json'))
 
     @httprettified
     def test_retrieve_balance(self):
