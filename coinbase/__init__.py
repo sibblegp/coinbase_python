@@ -551,7 +551,8 @@ class CoinbaseAccount(object):
             else:
                 error_msg += '.'
             raise RuntimeError(error_msg)
-        return CoinbasePaymentButton(**resp_data['button'])
+
+        return CoinbasePaymentButton.from_coinbase_dict(resp_data['button'])
 
     @property
     def exchange_rates(self):

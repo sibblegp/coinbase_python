@@ -204,7 +204,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         this(button.code).should.equal('f68a5c68d0a68679a6c6f569e651d695')
         this(button.name).should.equal('Test Button')
-        this(button.price['cents']).should.equal(2000)
+        this(button.price).should.equal(CoinbaseAmount('20', 'USD'))
 
     @httprettified
     def test_exchange_rates(self):
