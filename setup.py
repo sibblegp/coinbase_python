@@ -29,5 +29,6 @@ setup(
     tests_require=[
         'sure>=1.2.5',
         'httpretty>=0.8.0',
+        'mock',
     ],
 )
