@@ -3,14 +3,22 @@ __author__ = 'gsibble'
 from decimal import Decimal
 
 
+SATOSHIS_IN_A_BITCOIN = Decimal('100,000,000'.replace(',',''))
+
+
 class CoinbaseAmount(Decimal):
 
     @classmethod
     def from_coinbase_dict(cls, a):
-        return CoinbaseAmount(
-            amount=a['amount'],
-            currency=a['currency'],
-        )
+        if 'amount' in a:
+            return CoinbaseAmount(a['amount'], a['currency'])
+        elif 'cents' in a:
+            currency = a['currency_iso']
+            amount = a['cents'] / (SATOSHIS_IN_A_BITCOIN if currency == 'BTC'
+                                   else Decimal('100'))
+            return CoinbaseAmount(amount, currency)
+        else:
+            raise Exception
 
     def __new__(cls, amount, currency):
         return Decimal.__new__(cls, amount)
