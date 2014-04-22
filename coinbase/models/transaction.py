@@ -1,5 +1,7 @@
 __author__ = 'gsibble'
 
+import dateutil.parser
+
 from amount import CoinbaseAmount
 from contact import CoinbaseContact
 
@@ -9,7 +11,7 @@ class CoinbaseTransaction(object):
     def __init__(self, transaction):
 
         self.transaction_id = transaction['id']
-        self.created_at = transaction['created_at']
+        self.created_at = dateutil.parser.parse(transaction['created_at'])
         self.notes = transaction['notes']
 
         self.amount = \

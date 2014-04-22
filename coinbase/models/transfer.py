@@ -1,5 +1,7 @@
 __author__ = 'pmb6tz'
 
+import dateutil.parser
+
 from amount import CoinbaseAmount
 
 
@@ -8,7 +10,7 @@ class CoinbaseTransfer(object):
     def __init__(self, transfer):
         self.type = transfer['type']
         self.code = transfer['code']
-        self.created_at = transfer['created_at']
+        self.created_at = dateutil.parser.parse(transfer['created_at'])
 
         self.fees_coinbase = \
             CoinbaseAmount.from_coinbase_dict(transfer['fees']['coinbase'])
