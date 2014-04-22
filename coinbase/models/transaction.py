@@ -12,10 +12,8 @@ class CoinbaseTransaction(object):
         self.created_at = transaction['created_at']
         self.notes = transaction['notes']
 
-        transaction_amount = transaction['amount']['amount']
-        transaction_currency = transaction['amount']['currency']
-
-        self.amount = CoinbaseAmount(transaction_amount, transaction_currency)
+        self.amount = \
+            CoinbaseAmount.from_coinbase_dict(transaction['amount'])
 
         self.status = transaction['status']
         self.request = transaction['request']
