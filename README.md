@@ -46,6 +46,11 @@ More documentation coming soon.
 
 ## Changelog
 
+0.2.1
+
+* Updated SSL Certs
+* Added payment button support
+
 0.2.0
 
 * Push many updates to PyPi
