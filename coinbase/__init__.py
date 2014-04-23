@@ -34,18 +34,20 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 __author__ = 'gsibble'
 
 from oauth2client.client import AccessTokenRefreshError, OAuth2Credentials, AccessTokenCredentialsError
-
+import re
 import requests
 import httplib2
 import json
 import os
 import inspect
-
+import hashlib
+import hmac
+import time
 #TODO: Switch to decimals from floats
 #from decimal import Decimal
 
 from coinbase.config import COINBASE_ENDPOINT
-from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer, CoinbaseError, CoinbasePaymentButton
+from coinbase.models import CoinbaseAmount, CoinbaseTransaction, CoinbaseUser, CoinbaseTransfer, CoinbaseError
 
 
 class CoinbaseAccount(object):
@@ -57,7 +59,8 @@ class CoinbaseAccount(object):
 
     def __init__(self,
                  oauth2_credentials=None,
-                 api_key=None):
+                 api_key=None,
+                 api_secret=None):
         """
 
         :param oauth2_credentials: JSON representation of Coinbase oauth2 credentials
@@ -96,6 +99,14 @@ class CoinbaseAccount(object):
             #Set our request parameters to be empty
             self.global_request_params = {}
 
+        elif api_key and api_secret:
+
+            self.api_key = api_key
+            self.api_secret = api_secret
+
+            self.session.headers.update({'ACCESS_KEY': api_key})
+            
+            
         elif api_key:
             if type(api_key) is str:
 
@@ -167,7 +178,15 @@ class CoinbaseAccount(object):
         """
 
         url = COINBASE_ENDPOINT + '/account/balance'
-        response = self.session.get(url, params=self.global_request_params)
+        if(self.api_secret):
+            nonce = int(time.time() * 1e6)
+            message = str(nonce) + url
+            signature = hmac.new(self.api_secret, message, hashlib.sha256).hexdigest()
+            self.session.headers.update({'ACCESS_SIGNATURE': signature})
+            self.session.headers.update({'ACCESS_NONCE': nonce})
+            response = self.session.get(url=url, data=None)
+        else:
+            response = self.session.get(url, params=self.global_request_params)
         results = response.json()
         return CoinbaseAmount(results['amount'], results['currency'])
 
@@ -179,8 +198,19 @@ class CoinbaseAccount(object):
         :return: String address of account
         """
         url = COINBASE_ENDPOINT + '/account/receive_address'
-        response = self.session.get(url, params=self.global_request_params)
-        return response.json()['address']
+        if(self.api_secret):
+            nonce = int(time.time() * 1e6)
+            message = str(nonce) + url
+            signature = hmac.new(self.api_secret, message, hashlib.sha256).hexdigest()
+            self.session.headers.update({'ACCESS_SIGNATURE': signature})
+            self.session.headers.update({'ACCESS_NONCE': nonce})
+            response = self.session.get(url=url, data=None)
+            
+        else:
+            response = self.session.get(url, params=self.global_request_params)
+
+        results=response.json()
+        return str(results['address'])
 
     @property
     def contacts(self):
@@ -190,7 +220,15 @@ class CoinbaseAccount(object):
         :return: List of contacts in the account
         """
         url = COINBASE_ENDPOINT + '/contacts'
-        response = self.session.get(url, params=self.global_request_params)
+        if(self.api_secret):
+            nonce = int(time.time() * 1e6)
+            message = str(nonce) + url
+            signature = hmac.new(self.api_secret, message, hashlib.sha256).hexdigest()
+            self.session.headers.update({'ACCESS_SIGNATURE': signature})
+            self.session.headers.update({'ACCESS_NONCE': nonce})
+            response = self.session.get(url=url, data=None)
+        else:
+            response = self.session.get(url, params=self.global_request_params)
         return [contact['contact'] for contact in response.json()['contacts']]
 
 
@@ -205,7 +243,8 @@ class CoinbaseAccount(object):
         """
         url = COINBASE_ENDPOINT + '/prices/buy'
         params = {'qty': qty}
-        params.update(self.global_request_params)
+        if(self.api_secret==None):
+            params.update(self.global_request_params)
         response = self.session.get(url, params=params)
         results = response.json()
         return CoinbaseAmount(results['amount'], results['currency'])
@@ -218,7 +257,8 @@ class CoinbaseAccount(object):
         """
         url = COINBASE_ENDPOINT + '/prices/sell'
         params = {'qty': qty}
-        params.update(self.global_request_params)
+        if(self.api_secret==None):
+            params.update(self.global_request_params)
         response = self.session.get(url, params=params)
         results = response.json()
         return CoinbaseAmount(results['amount'], results['currency'])
@@ -244,7 +284,16 @@ class CoinbaseAccount(object):
             "qty": qty,
             "agree_btc_amount_varies": pricevaries
         }
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        data = json.dumps(request_data)
+        if(self.api_secret):
+            nonce = int(time.time() * 1e6)
+            message = str(nonce) + url + data
+            signature = hmac.new(self.api_secret, message, hashlib.sha256).hexdigest()
+            self.session.headers.update({'ACCESS_SIGNATURE': signature})
+            self.session.headers.update({'ACCESS_NONCE': nonce})
+            response = self.session.post(url=url, data=data)
+        else:
+            response = self.session.post(url=url, data=data, params=self.global_requestparams)
         response_parsed = response.json()
         if response_parsed['success'] == False:
             return CoinbaseError(response_parsed['errors'])
@@ -263,7 +312,16 @@ class CoinbaseAccount(object):
         request_data = {
             "qty": qty,
         }
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        data = json.dumps(request_data)
+        if(self.api_secret):
+            nonce = int(time.time() * 1e6)
+            message = str(nonce) + url + data
+            signature = hmac.new(self.api_secret, message, hashlib.sha256).hexdigest()
+            self.session.headers.update({'ACCESS_SIGNATURE': signature})
+            self.session.headers.update({'ACCESS_NONCE': nonce})
+            response = self.session.post(url=url, data=data)
+        else:
+            response = self.session.post(url=url, data=data, params=self.global_requestparams)
         response_parsed = response.json()
         if response_parsed['success'] == False:
             return CoinbaseError(response_parsed['errors'])
@@ -300,7 +358,16 @@ class CoinbaseAccount(object):
                 }
             }
 
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        data = json.dumps(request_data)
+        if(self.api_secret):
+            nonce = int(time.time() * 1e6)
+            message = str(nonce) + url + data
+            signature = hmac.new(self.api_secret, message, hashlib.sha256).hexdigest()
+            self.session.headers.update({'ACCESS_SIGNATURE': signature})
+            self.session.headers.update({'ACCESS_NONCE': nonce})
+            response = self.session.post(url=url, data=data)
+        else:
+            response = self.session.post(url=url, data=data, params=self.global_requestparams)
         response_parsed = response.json()
         if response_parsed['success'] == False:
             pass
@@ -338,7 +405,16 @@ class CoinbaseAccount(object):
                 }
             }
 
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        data = json.dumps(request_data)
+        if(self.api_secret):
+            nonce = int(time.time() * 1e6)
+            message = str(nonce) + url + data
+            signature = hmac.new(self.api_secret, message, hashlib.sha256).hexdigest()
+            self.session.headers.update({'ACCESS_SIGNATURE': signature})
+            self.session.headers.update({'ACCESS_NONCE': nonce})
+            response = self.session.post(url=url, data=data)
+        else:
+            response = self.session.post(url=url, data=data, params=self.global_requestparams)
         response_parsed = response.json()
 
         if response_parsed['success'] == False:
@@ -428,8 +504,8 @@ class CoinbaseAccount(object):
         url = COINBASE_ENDPOINT + '/users'
         response = self.session.get(url, params=self.global_request_params)
         results = response.json()
-
-        user_details = results['users'][0]['user']
+        
+        user_details = results['users'],[0],['user']
 
         #Convert our balance and limits to proper amounts
         balance = CoinbaseAmount(user_details['balance']['amount'], user_details['balance']['currency'])
@@ -461,53 +537,17 @@ class CoinbaseAccount(object):
                 "callback_url": callback_url
             }
         }
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        data = json.dumps(request_data)
+        if(self.api_secret):
+            nonce = int(time.time() * 1e6)
+            message = str(nonce) + url + data
+            signature = hmac.new(self.api_secret, message, hashlib.sha256).hexdigest()
+            self.session.headers.update({'ACCESS_SIGNATURE': signature})
+            self.session.headers.update({'ACCESS_NONCE': nonce})
+            response = self.session.post(url=url, data=data)
+        else:
+            response = self.session.post(url=url, data=data, params=self.global_requestparams)
         return response.json()['address']
 
 
-    def create_button(self, name, price, price_currency='BTC',
-                      button_type='buy_now', callback_url=None,
-                      **kwargs):
-        """
-        Create a new payment button, page, or iframe.
 
-        Some required parameters are documented, but the rest are supported
-        as keyword-arguments.
-        
-        See https://coinbase.com/api/doc/1.0/buttons/create.html for details.
-
-        :param name: The name of the item to be purchased, donated for, or
-        subscribed.
-        :param price: The price, in whatever currency specified. Preferably a
-        string or Decimal.
-        :param price_currency: The ISO currency in which the price is listed.
-        Eg, BTC or USD.
-        :param button_type: Choices are 'buy_now', 'donation', and
-        'subscription'
-        :param callback_url: The URL to receive instant payment notifications
-
-        :return: The embeddable HTML string
-        """
-        url = COINBASE_ENDPOINT + '/buttons'
-        request_data = {
-            "button": {
-                "name":name,
-                "price_string":unicode(price),
-                "price_currency_iso":price_currency,
-                "button_type":button_type
-            }
-        }
-        if callback_url is not None:
-            request_data['button']['callback_url'] = callback_url
-        request_data['button'].update(kwargs)
-        response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.global_request_params)
-        resp_data = response.json()
-        if not resp_data['success'] or 'button' not in resp_data:
-            error_msg = 'Error creating button'
-            if 'errors' in resp_data:
-                error_msg += ':' + u'\n'.join(resp_data)
-            else:
-                error_msg += '.'
-            raise RuntimeError(error_msg)
-        return CoinbasePaymentButton(**resp_data['button'])
