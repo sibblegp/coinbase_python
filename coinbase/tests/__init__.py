@@ -203,9 +203,11 @@ class CoinBaseLibraryTests(unittest.TestCase):
     @httprettified
     def test_getting_user_details(self):
 
-        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/users",
-                               body='''{"users":[{"user":{"id":"509f01da12837e0201100212","name":"New User","email":"gsibble@gmail.com","time_zone":"Pacific Time (US & Canada)","native_currency":"USD","buy_level":1,"sell_level":1,"balance":{"amount":"1225.86084181","currency":"BTC"},"buy_limit":{"amount":"10.00000000","currency":"BTC"},"sell_limit":{"amount":"50.00000000","currency":"BTC"}}}]}''',
-                               content_type='text/json')
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            'https://coinbase.com/api/v1/users',
+            body=read('users.json'),
+            content_type='text/json')
 
         user = self.account.get_user_details()
 

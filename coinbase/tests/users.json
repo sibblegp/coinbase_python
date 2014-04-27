@@ -1,0 +1,27 @@
+{
+    "users": [
+        {
+            "user": {
+                "balance": {
+                    "amount": "1225.86084181",
+                    "currency": "BTC"
+                },
+                "buy_level": 1,
+                "buy_limit": {
+                    "amount": "10.00000000",
+                    "currency": "BTC"
+                },
+                "email": "gsibble@gmail.com",
+                "id": "509f01da12837e0201100212",
+                "name": "New User",
+                "native_currency": "USD",
+                "sell_level": 1,
+                "sell_limit": {
+                    "amount": "50.00000000",
+                    "currency": "BTC"
+                },
+                "time_zone": "Pacific Time (US & Canada)"
+            }
+        }
+    ]
+}
