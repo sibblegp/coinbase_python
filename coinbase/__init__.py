@@ -469,8 +469,8 @@ class CoinbaseAccount(object):
 
         url = COINBASE_ENDPOINT + '/account/generate_receive_address'
         request_data = {
-            "address": {
-                "callback_url": callback_url
+            'address': {
+                'callback_url': callback_url
             }
         }
         response = self.session.post(url=url, data=json.dumps(request_data),
@@ -500,11 +500,11 @@ class CoinbaseAccount(object):
 
         url = COINBASE_ENDPOINT + '/buttons'
         request_data = {
-            "button": {
-                "name":name,
-                "price_string":str(Decimal(price)),
-                "price_currency_iso":price.currency,
-                "button_type":button_type
+            'button': {
+                'name': name,
+                'price_string': str(Decimal(price)),
+                'price_currency_iso': price.currency,
+                'button_type': button_type
             }
         }
         if callback_url is not None:
