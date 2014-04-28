@@ -28,15 +28,17 @@ class CoinBaseAPIKeyTests(unittest.TestCase):
 
     def setUp(self):
         self.account = CoinbaseAccount(
-            api_key='f64223978e5fd99d07cded069db2189a38c17142fee35625f6ab3635585f61ab',
-        )
+            api_key='f64223978e5fd99d07cded069db2189a'
+                    '38c17142fee35625f6ab3635585f61ab')
 
     @httprettified
     def test_api_key_balance(self):
 
-        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/account/balance",
-                           body='''{"amount":"1.00000000","currency":"BTC"}''',
-                           content_type='text/json')
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            'https://coinbase.com/api/v1/account/balance',
+            body='{"amount":"1.00000000","currency":"BTC"}',
+            content_type='text/json')
 
         this(self.account.balance).should.equal(CoinbaseAmount('1.0', 'BTC'))
 
@@ -50,10 +52,11 @@ class CoinBaseLibraryTests(unittest.TestCase):
     @httprettified
     def test_retrieve_balance(self):
 
-        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/account/balance",
-                               body='''{"amount":"0.00000000","currency":"BTC"}''',
-                               content_type='text/json')
-
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            'https://coinbase.com/api/v1/account/balance',
+            body='{"amount":"0.00000000","currency":"BTC"}',
+            content_type='text/json')
 
         this(self.account.balance).should.equal(
             CoinbaseAmount('0.00000000', 'BTC'))
@@ -61,11 +64,14 @@ class CoinBaseLibraryTests(unittest.TestCase):
     @httprettified
     def test_receive_addresses(self):
 
-        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/account/receive_address",
-                               body='''{"address" : "1DX9ECEF3FbGUtzzoQhDT8CG3nLUEA2FJt"}''',
-                               content_type='text/json')
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            'https://coinbase.com/api/v1/account/receive_address',
+            body='{"address":"1DX9ECEF3FbGUtzzoQhDT8CG3nLUEA2FJt"}',
+            content_type='text/json')
 
-        this(self.account.receive_address).should.equal(u'1DX9ECEF3FbGUtzzoQhDT8CG3nLUEA2FJt')
+        this(self.account.receive_address).should.equal(
+            u'1DX9ECEF3FbGUtzzoQhDT8CG3nLUEA2FJt')
 
     @httprettified
     def test_contacts(self):
@@ -84,9 +90,12 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
     @httprettified
     def test_buy_price_1(self):
-        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/prices/buy?qty=1",
-                               body='''{"amount":"63.31","currency":"USD"}''',
-                               content_type='text/json')
+
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            'https://coinbase.com/api/v1/prices/buy?qty=1',
+            body='{"amount":"63.31","currency":"USD"}',
+            content_type='text/json')
 
         this(self.account.buy_price(1)).should.equal(
             CoinbaseAmount('63.31', 'USD'))
@@ -94,9 +103,11 @@ class CoinBaseLibraryTests(unittest.TestCase):
     @httprettified
     def test_buy_price_2(self):
 
-        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/prices/buy?qty=10",
-                               body='''{"amount":"633.25","currency":"USD"}''',
-                               content_type='text/json')
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            'https://coinbase.com/api/v1/prices/buy?qty=10',
+            body='{"amount":"633.25","currency":"USD"}',
+            content_type='text/json')
 
         this(self.account.buy_price(10)).should.equal(
             CoinbaseAmount('633.25', 'USD'))
@@ -104,18 +115,23 @@ class CoinBaseLibraryTests(unittest.TestCase):
     @httprettified
     def test_sell_price(self):
 
-        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/prices/sell?qty=1",
-                               body='''{"amount":"63.31","currency":"USD"}''',
-                               content_type='text/json')
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            'https://coinbase.com/api/v1/prices/sell?qty=1',
+            body='{"amount":"63.31","currency":"USD"}',
+            content_type='text/json')
 
         this(self.account.sell_price(1)).should.equal(
             CoinbaseAmount('63.31', 'USD'))
 
     @httprettified
     def test_sell_price_10(self):
-        HTTPretty.register_uri(HTTPretty.GET, "https://coinbase.com/api/v1/prices/sell?qty=1",
-                               body='''{"amount":"630.31","currency":"USD"}''',
-                               content_type='text/json')
+
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            'https://coinbase.com/api/v1/prices/sell?qty=1',
+            body='{"amount":"630.31","currency":"USD"}',
+            content_type='text/json')
 
         this(self.account.sell_price(10)).should.equal(
             CoinbaseAmount('630.31', 'USD'))
