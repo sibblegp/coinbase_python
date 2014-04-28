@@ -1,6 +1,5 @@
 __author__ = 'gsibble'
 
-import sure
 from sure import it, this, those, these
 import unittest
 from httpretty import HTTPretty, httprettified
