@@ -29,7 +29,6 @@ class CoinBaseAPIKeyTests(unittest.TestCase):
     def setUp(self):
         self.account = CoinbaseAccount(
             api_key='f64223978e5fd99d07cded069db2189a38c17142fee35625f6ab3635585f61ab',
-            allow_transfers=True,
         )
 
     @httprettified
