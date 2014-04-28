@@ -466,25 +466,7 @@ class CoinbaseAccount(object):
         response = self.session.get(url, params=self.auth_params)
         results = response.json()
 
-        user_details = results['users'][0]['user']
-
-        #Convert our balance and limits to proper amounts
-        balance = CoinbaseAmount.from_coinbase_dict(user_details['balance'])
-        buy_limit = CoinbaseAmount.from_coinbase_dict(user_details['buy_limit'])
-        sell_limit = CoinbaseAmount.from_coinbase_dict(user_details['sell_limit'])
-
-        user = CoinbaseUser(user_id=user_details['id'],
-                            name=user_details['name'],
-                            email=user_details['email'],
-                            time_zone=user_details['time_zone'],
-                            native_currency=user_details['native_currency'],
-                            balance=balance,
-                            buy_level=user_details['buy_level'],
-                            sell_level=user_details['sell_level'],
-                            buy_limit=buy_limit,
-                            sell_limit=sell_limit)
-
-        return user
+        return CoinbaseUser.from_coinbase_dict(results['users'][0]['user'])
 
     def generate_receive_address(self, callback_url=None):
         """
