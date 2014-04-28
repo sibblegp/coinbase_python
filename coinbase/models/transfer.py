@@ -7,31 +7,53 @@ from amount import CoinbaseAmount
 
 class CoinbaseTransfer(object):
 
-    def __init__(self, transfer):
-        self.type = transfer['type']
-        self.code = transfer['code']
-        self.created_at = dateutil.parser.parse(transfer['created_at'])
+    def __init__(self, type, code, created_at, fees_coinbase, fees_bank,
+                 payout_date, transaction_id, status, btc_amount,
+                 subtotal_amount, total_amount, description):
+        self.type = type
+        self.code = code
+        self.created_at = created_at
+        self.fees_coinbase = fees_coinbase
+        self.fees_bank = fees_bank
+        self.payout_date = payout_date
+        self.transaction_id = transaction_id
+        self.status = status
+        self.btc_amouint = btc_amount
+        self.subtotal_amount = subtotal_amount
+        self.total_amount = total_amount
+        self.description = description
 
-        self.fees_coinbase = \
+    @classmethod
+    def from_coinbase_dict(cls, transfer):
+
+        kwargs = {}
+
+        kwargs['type'] = transfer['type']
+        kwargs['code'] = transfer['code']
+        kwargs['created_at'] = dateutil.parser.parse(transfer['created_at'])
+
+        kwargs['fees_coinbase'] = \
             CoinbaseAmount.from_coinbase_dict(transfer['fees']['coinbase'])
 
-        self.fees_bank = \
+        kwargs['fees_bank'] = \
             CoinbaseAmount.from_coinbase_dict(transfer['fees']['bank'])
 
-        self.payout_date = transfer['payout_date']
-        self.transaction_id = transfer.get('transaction_id','')
-        self.status = transfer['status']
+        kwargs['payout_date'] = transfer['payout_date']
+        kwargs['transaction_id'] = transfer.get('transaction_id','')
+        kwargs['status'] = transfer['status']
 
-        self.btc_amount = \
+        kwargs['btc_amount'] = \
             CoinbaseAmount.from_coinbase_dict(transfer['btc'])
 
-        self.subtotal_amount = CoinbaseAmount \
-            .from_coinbase_dict(transfer['subtotal'])
+        kwargs['subtotal_amount'] = \
+            CoinbaseAmount.from_coinbase_dict(transfer['subtotal'])
 
-        self.total_amount = \
+        kwargs['total_amount'] = \
             CoinbaseAmount.from_coinbase_dict(transfer['total'])
 
-        self.description = transfer.get('description','')
+        kwargs['description'] = transfer.get('description', '')
+
+        return CoinbaseTransfer(**kwargs)
 
     def refresh(self):
         pass

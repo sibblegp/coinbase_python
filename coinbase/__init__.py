@@ -259,7 +259,7 @@ class CoinbaseAccount(object):
             raise CoinbaseError('Failed to buy btc.',
                                 response_parsed.get('errors'))
 
-        return CoinbaseTransfer(response_parsed['transfer'])
+        return CoinbaseTransfer.from_coinbase_dict(response_parsed['transfer'])
 
     def sell_btc(self, qty):
         """
@@ -283,7 +283,7 @@ class CoinbaseAccount(object):
             raise CoinbaseError('Failed to sell btc.',
                                 response_parsed.get('errors'))
 
-        return CoinbaseTransfer(response_parsed['transfer'])
+        return CoinbaseTransfer.from_coinbase_dict(response_parsed['transfer'])
 
     def request(self, from_email, amount, notes='', currency='BTC'):
         """
@@ -434,7 +434,8 @@ class CoinbaseAccount(object):
                     reached_final_page = True
 
                 for transfer in parsed_transfers['transfers']:
-                    transfers.append(CoinbaseTransfer(transfer['transfer']))
+                    transfers.append(CoinbaseTransfer
+                                     .from_coinbase_dict(transfer['transfer']))
 
         return transfers
 
