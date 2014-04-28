@@ -326,7 +326,8 @@ class CoinbaseAccount(object):
             raise CoinbaseError('Failed to request btc.',
                                 response_parsed.get('errors'))
 
-        return CoinbaseTransaction(response_parsed['transaction'])
+        return CoinbaseTransaction \
+            .from_coinbase_dict(response_parsed['transaction'])
 
     def send(self, to_address, amount, notes='', currency='BTC'):
         """
@@ -372,7 +373,8 @@ class CoinbaseAccount(object):
             raise CoinbaseError('Failed to send btc.',
                                 response_parsed.get('errors'))
 
-        return CoinbaseTransaction(response_parsed['transaction'])
+        return CoinbaseTransaction \
+            .from_coinbase_dict(response_parsed['transaction'])
 
     def transactions(self, count=30):
         """
@@ -400,9 +402,9 @@ class CoinbaseAccount(object):
                     reached_final_page = True
 
                 for transaction in parsed_transactions['transactions']:
-                    transactions.append(
-                        CoinbaseTransaction(transaction['transaction'])
-                    )
+                    tx = CoinbaseTransaction \
+                        .from_coinbase_dict(transaction['transaction'])
+                    transactions.append(tx)
 
         return transactions
 
@@ -452,7 +454,7 @@ class CoinbaseAccount(object):
             pass
             #TODO:  Add error handling
 
-        return CoinbaseTransaction(results['transaction'])
+        return CoinbaseTransaction.from_coinbase_dict(results['transaction'])
 
     def get_user_details(self):
         """
