@@ -17,10 +17,10 @@ def read(filename):
 class CoinBaseAmountTests(unittest.TestCase):
 
     def setUp(self):
-        self.cb_amount = CoinbaseAmount(1, 'BTC')
+        self.cb_amount = CoinbaseAmount('1.063', 'BTC')
 
     def test_cb_amount_class(self):
-        this(Decimal(self.cb_amount)).should.equal(Decimal('1'))
+        this(Decimal(self.cb_amount)).should.equal(Decimal('1.063'))
         this(self.cb_amount.currency).should.equal('BTC')
 
 
