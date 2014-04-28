@@ -285,13 +285,12 @@ class CoinbaseAccount(object):
 
         return CoinbaseTransfer.from_coinbase_dict(response_parsed['transfer'])
 
-    def request(self, from_email, amount, notes='', currency='BTC'):
+    def request(self, from_email, amount, notes=''):
         """
         Request BitCoin from an email address to be delivered to this account
         :param from_email: Email from which to request BTC
-        :param amount: Amount to request in assigned currency
+        :param amount: Amount to request (CoinbaseAmount)
         :param notes: Notes to include with the request
-        :param currency: Currency of the request
         :return: CoinbaseTransaction with status and details
         :raise: CoinbaseError with the error list received from Coinbase on
                  failure
@@ -301,23 +300,18 @@ class CoinbaseAccount(object):
 
         url = COINBASE_ENDPOINT + '/transactions/request_money'
 
-        if currency == 'BTC':
-            request_data = {
-                "transaction": {
-                    "from": from_email,
-                    "amount": amount,
-                    "notes": notes
-                }
-            }
+        request_data = {
+            'transaction': {
+                'from': from_email,
+                'notes': notes,
+            },
+        }
+
+        if amount.currency == 'BTC':
+            request_data['transaction']['amount'] = str(Decimal(amount))
         else:
-            request_data = {
-                "transaction": {
-                    "from": from_email,
-                    "amount_string": str(amount),
-                    "amount_currency_iso": currency,
-                    "notes": notes
-                }
-            }
+            request_data['transaction']['amount_string'] = str(Decimal(amount))
+            request_data['transaction']['amount_currency_iso'] = amount.currency
 
         response = self.session.post(url=url, data=json.dumps(request_data),
                                      params=self.auth_params)
@@ -329,14 +323,13 @@ class CoinbaseAccount(object):
         return CoinbaseTransaction \
             .from_coinbase_dict(response_parsed['transaction'])
 
-    def send(self, to_address, amount, notes='', currency='BTC'):
+    def send(self, to_address, amount, notes=''):
         """
         Send BitCoin from this account to either an email address or a BTC
         address
         :param to_address: Email or BTC address to where coin should be sent
-        :param amount: Amount of currency to send
+        :param amount: Amount of currency to send (CoinbaseAmount)
         :param notes: Notes to be included with transaction
-        :param currency: Currency to send
         :return: CoinbaseTransaction with status and details
         :raise: CoinbaseError with the error list received from Coinbase on
                  failure
@@ -346,24 +339,19 @@ class CoinbaseAccount(object):
 
         url = COINBASE_ENDPOINT + '/transactions/send_money'
 
-        if currency == 'BTC':
-            request_data = {
-                "transaction": {
-                    "to": to_address,
-                    "amount": amount,
-                    "notes": notes
-                }
-            }
-        else:
+        request_data = {
+            'transaction': {
+                'to': to_address,
+                'amount': amount,
+                'notes': notes,
+            },
+        }
 
-            request_data = {
-                "transaction": {
-                    "to": to_address,
-                    "amount_string": str(amount),
-                    "amount_currency_iso": currency,
-                    "notes": notes
-                }
-            }
+        if amount.currency == 'BTC':
+            request_data['transaction']['amount'] =  str(Decimal(amount))
+        else:
+            request_data['transaction']['amount_string'] = str(Decimal(amount))
+            request_data['transaction']['amount_currency_iso'] = amount.currency
 
         response = self.session.post(url=url, data=json.dumps(request_data),
                                      params=self.auth_params)
@@ -489,9 +477,8 @@ class CoinbaseAccount(object):
                                      params=self.auth_params)
         return response.json()['address']
 
-    def create_button(self, name, price, price_currency='BTC',
-                      button_type='buy_now', callback_url=None,
-                      **kwargs):
+    def create_button(self, name, price, button_type='buy_now',
+                      callback_url=None, **kwargs):
         """
         Create a new payment button, page, or iframe.
 
@@ -502,10 +489,7 @@ class CoinbaseAccount(object):
 
         :param name: The name of the item to be purchased, donated for, or
         subscribed.
-        :param price: The price, in whatever currency specified. Preferably a
-        string or Decimal.
-        :param price_currency: The ISO currency in which the price is listed.
-        Eg, BTC or USD.
+        :param price: The price (CoinbaseAmount)
         :param button_type: Choices are 'buy_now', 'donation', and
         'subscription'
         :param callback_url: The URL to receive instant payment notifications
@@ -518,8 +502,8 @@ class CoinbaseAccount(object):
         request_data = {
             "button": {
                 "name":name,
-                "price_string":unicode(price),
-                "price_currency_iso":price_currency,
+                "price_string":str(Decimal(price)),
+                "price_currency_iso":price.currency,
                 "button_type":button_type
             }
         }

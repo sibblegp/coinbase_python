@@ -132,8 +132,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
             content_type='text/json')
 
         request = self.account.request(from_email='alice@example.com',
-                                       amount='1',
-                                       currency='BTC',
+                                       amount=CoinbaseAmount('1', 'BTC'),
                                        notes='Testing')
 
         this(request.amount).should.equal(CoinbaseAmount('1', 'BTC'))
@@ -152,8 +151,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
             content_type='text/json')
 
         tx = self.account.send(to_address='7nregFERfhn8f34FERf8yn8fEGgfe274nv',
-                               amount='0.1',
-                               currency='BTC')
+                               amount=CoinbaseAmount('0.1', 'BTC'))
 
         this(tx.amount).should.equal(CoinbaseAmount(Decimal('-0.1'), 'BTC'))
         this(tx.request).should.equal(False)
@@ -172,8 +170,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
             content_type='text/json')
 
         tx = self.account.send(to_address='bob@example.com',
-                               amount='0.1',
-                               currency='BTC')
+                               amount=CoinbaseAmount('0.1', 'BTC'))
 
         this(tx.recipient.email).should.equal('bob@example.com')
 
