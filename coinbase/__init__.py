@@ -57,7 +57,8 @@ class CoinbaseAccount(object):
 
     def __init__(self,
                  oauth2_credentials=None,
-                 api_key=None):
+                 api_key=None,
+                 oauth_access_token=None):
         """
 
         :param oauth2_credentials: JSON representation of Coinbase oauth2 credentials
@@ -97,7 +98,7 @@ class CoinbaseAccount(object):
             self.global_request_params = {}
 
         elif api_key:
-            if type(api_key) is str:
+            if isinstance(api_key, basestring):
 
                 #Set our API Key
                 self.api_key = api_key
@@ -106,8 +107,14 @@ class CoinbaseAccount(object):
                 self.global_request_params = {'api_key':api_key}
             else:
                 print "Your api_key must be a string"
+        elif oauth_access_token:
+            if isinstance(oauth_access_token, basestring):
+                self.oauth_access_token = oauth_access_token
+                self.global_request_params = {'access_token': oauth_access_token}
+            else:
+                print "Oauth access token must be a string"
         else:
-            print "You must pass either an api_key or oauth_credentials"
+            print "You must pass either an api_key, oauth_credentials, or oauth_access_token."
 
     def _check_oauth_expired(self):
         """
@@ -308,7 +315,7 @@ class CoinbaseAccount(object):
 
         return CoinbaseTransaction(response_parsed['transaction'])
 
-    def send(self, to_address, amount, notes='', currency='BTC'):
+    def send(self, to_address, amount, notes='', currency='BTC', transaction_params=dict()):
         """
         Send BitCoin from this account to either an email address or a BTC address
         :param to_address: Email or BTC address to where coin should be sent
@@ -338,11 +345,11 @@ class CoinbaseAccount(object):
                 }
             }
 
+        request_data['transaction'].update(transaction_params)
         response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
         response_parsed = response.json()
-
         if response_parsed['success'] == False:
-            raise RuntimeError('Transaction Failed')
+            raise RuntimeError('Transaction Failed: %s' % response_parsed.get('errors', 'no errors returned'))
 
         return CoinbaseTransaction(response_parsed['transaction'])
 
