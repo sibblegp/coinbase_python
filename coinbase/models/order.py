@@ -33,19 +33,8 @@ class CoinbaseOrder(namedtuple(
                 x['order'], prefix='total'),
             mispaid=CoinbaseAmount.BtcAndNative.from_coinbase_dict(
                 x['order'], prefix='mispaid'),
-            customer=(
-                # In the /orders API, customer is on the root object
-                optional(CoinbaseOrder.Customer.from_coinbase_dict)(
-                    x.get('customer')
-                )
-                or
-                # For order callbacks (in the documentation, at least;
-                # haven't confirmed for an actual callback), customer
-                # is on the order object.
-                optional(CoinbaseOrder.Customer.from_coinbase_dict)(
-                    x['order'].get('customer')
-                )
-            ),
+            customer=optional(CoinbaseOrder.Customer.from_coinbase_dict)(
+                x.get('customer')),
             refund_address=x['order'].get('refund_address'),
         )
 
