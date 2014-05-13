@@ -402,7 +402,6 @@ class CoinBaseLibraryTests(unittest.TestCase):
         this(self.account.get_order('A7C52JQT')).should.be.equal(order)
         this(self.account.get_order('custom123')).should.be.equal(order)
 
-    @httprettified
     def test_order_callback(self):
         """
         The example from the callbacks doc
