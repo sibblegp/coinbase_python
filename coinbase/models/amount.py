@@ -1,50 +1,47 @@
-__author__ = 'gsibble'
-
 from decimal import Decimal
 
+from .util import namedtuple
 
-SATOSHIS_IN_A_BITCOIN = Decimal('100,000,000'.replace(',',''))
+SATOSHIS_IN_A_BITCOIN = Decimal('100,000,000'.replace(',', ''))
 
 
-class CoinbaseAmount(Decimal):
+class CoinbaseAmount(namedtuple(
+    'CoinbaseAmount',
+    'amount currency'
+)):
+
+    def __new__(cls, amount, currency):
+        return super(CoinbaseAmount, cls).__new__(
+            cls,
+            Decimal(amount),
+            currency,
+        )
 
     @classmethod
-    def from_coinbase_dict(cls, a):
-        if 'amount' in a:
-            return CoinbaseAmount(a['amount'], a['currency'])
-        elif 'cents' in a:
-            currency = a['currency_iso']
-            amount = a['cents'] / (SATOSHIS_IN_A_BITCOIN if currency == 'BTC'
+    def from_coinbase_dict(cls, x):
+        if 'amount' in x:
+            return CoinbaseAmount(x['amount'], x['currency'])
+        elif 'cents' in x:
+            currency = x['currency_iso']
+            amount = x['cents'] / (SATOSHIS_IN_A_BITCOIN if currency == 'BTC'
                                    else Decimal('100'))
             return CoinbaseAmount(amount, currency)
         else:
             raise Exception
 
-    def __new__(cls, amount, currency):
-        return Decimal.__new__(cls, amount)
 
-    def __init__(self, amount, currency):
-        super(CoinbaseAmount, self).__init__()
-        self.currency = currency
+    class BtcAndNative(namedtuple('CoinbaseAmount_BtcAndNative', 'btc native')):
 
-    def __repr__(self):
-        return "CoinbaseAmount('%s', '%s')" % (
-            str(Decimal(self)),
-            self.currency,
-        )
+        @classmethod
+        def from_coinbase_dict(cls, x, prefix):
 
-    def __unicode__(self):
-        return '%s %s' % (
-            str(Decimal(self)),
-            self.currency,
-        )
+            btc_key = prefix + '_btc'
+            native_key = prefix + '_native'
 
-    def __str__(self):
-        return self.__unicode__()
+            if btc_key not in x:
+                return None
 
-    def __eq__(self, other, context=None):
-        return super(CoinbaseAmount, self).__eq__(other, context) \
-            and self.currency == other.currency
-
-    def __neq__(self, other, context=None):
-        return not self.__eq__(other)
+            return CoinbaseAmount.BtcAndNative(
+                btc=CoinbaseAmount.from_coinbase_dict(x[btc_key]),
+                native=CoinbaseAmount.from_coinbase_dict(x[native_key])
+            )

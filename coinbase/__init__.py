@@ -44,8 +44,7 @@ import os
 from decimal import Decimal
 
 from coinbase.config import COINBASE_ENDPOINT
-from coinbase.models import CoinbaseAmount, CoinbaseTransaction, \
-    CoinbaseUser, CoinbaseTransfer, CoinbaseError, CoinbasePaymentButton
+from coinbase.models import *
 
 
 class CoinbaseAccount(object):
@@ -308,9 +307,9 @@ class CoinbaseAccount(object):
         }
 
         if amount.currency == 'BTC':
-            request_data['transaction']['amount'] = str(Decimal(amount))
+            request_data['transaction']['amount'] = str(amount.amount)
         else:
-            request_data['transaction']['amount_string'] = str(Decimal(amount))
+            request_data['transaction']['amount_string'] = str(amount.amount)
             request_data['transaction']['amount_currency_iso'] = amount.currency
 
         response = self.session.post(url=url, data=json.dumps(request_data),
@@ -348,9 +347,9 @@ class CoinbaseAccount(object):
         }
 
         if amount.currency == 'BTC':
-            request_data['transaction']['amount'] =  str(Decimal(amount))
+            request_data['transaction']['amount'] =  str(amount.amount)
         else:
-            request_data['transaction']['amount_string'] = str(Decimal(amount))
+            request_data['transaction']['amount_string'] = str(amount.amount)
             request_data['transaction']['amount_currency_iso'] = amount.currency
 
         response = self.session.post(url=url, data=json.dumps(request_data),
@@ -502,7 +501,7 @@ class CoinbaseAccount(object):
         request_data = {
             'button': {
                 'name': name,
-                'price_string': str(Decimal(price)),
+                'price_string': str(price.amount),
                 'price_currency_iso': price.currency,
                 'button_type': button_type
             }
@@ -530,6 +529,30 @@ class CoinbaseAccount(object):
         currencies. It has keys for both btc_to_xxx and xxx_to_btc.
         :return: Dict with str keys and Decimal values
         """
-        url = 'https://coinbase.com/api/v1/currencies/exchange_rates'
+        url = COINBASE_ENDPOINT + '/currencies/exchange_rates'
         rates = json.loads(requests.get(url).content)
         return dict(((k, Decimal(v)) for k, v in rates.iteritems()))
+
+    def orders(self, account_id=None, page=None):
+        """
+        Returns a merchant's orders that they have received.
+        Sorted by created_at in descending order.
+
+        :param account_id: Specify which account is used for fetching data.
+        The default is your primary account.
+        :param page: Can be used to page through results. Default is 1.
+        :return: List of CoinbaseOrder
+        """
+        self._require_authentication()
+
+        url = COINBASE_ENDPOINT + '/orders'
+
+        params = {}
+        if account_id is not None:
+            params['account_id'] = account_id
+        if page is not None:
+            params['page'] = page
+        params.update(self.auth_params)
+
+        response = self.session.get(url=url, params=params)
+        return map(CoinbaseOrder.from_coinbase_dict, response.json()['orders'])

@@ -1,18 +1,61 @@
-class CoinbaseOrder(object):
+from .util import namedtuple, optional
 
-    def __init__(self, order_id, created_at, status, receive_address,
-                 button, transaction=None, custom=None,
-                 total_btc=None, total_native=None,
-                 mispaid_btc=None, mispaid_native=None):
+import dateutil.parser
 
-        self.order_id = order_id
-        self.created_at = created_at
-        self.status = status
-        self.receive_address = receive_address
-        self.button = button,
-        self.transaction = transaction
-        self.custom = custom
-        self.total_btc = total_btc
-        self.total_native = total_native
-        self.mispaid_btc = mispaid_btc
-        self.mispaid_native = mispaid_native
+from . import CoinbaseAmount
+
+
+class CoinbaseOrder(namedtuple(
+    'CoinbaseOrder',
+    optional='id created_at status receive_address button '
+             'transaction custom total mispaid customer_email'
+)):
+
+    @classmethod
+    def from_coinbase_dict(cls, x):
+
+        return CoinbaseOrder(
+            id=x['order']['id'],
+            created_at=dateutil.parser.parse(
+                x['order']['created_at']),
+            status=x['order']['status'],
+            receive_address=x['order']['receive_address'],
+            button=CoinbaseOrder.Button.from_coinbase_dict(
+                x['order']['button']),
+            transaction=optional(CoinbaseOrder.Transaction.from_coinbase_dict)(
+                x['order']['transaction']),
+            custom=x['order'].get('custom'),
+            total=CoinbaseAmount.BtcAndNative.from_coinbase_dict(
+                x['order'], prefix='total'),
+            mispaid=CoinbaseAmount.BtcAndNative.from_coinbase_dict(
+                x['order'], prefix='mispaid'),
+            customer_email=x['customer'].get('email'),
+        )
+
+    class Button(namedtuple(
+        'CoinbaseOrder_Button',
+        'id type',
+        optional='name description'
+    )):
+
+        @classmethod
+        def from_coinbase_dict(cls, x):
+            return CoinbaseOrder.Button(
+                id=x['id'],
+                type=x['type'],
+                name=x['name'],
+                description=x['description'],
+            )
+
+    class Transaction(namedtuple(
+        'CoinbaseOrder_Transaction',
+        'id hash confirmations'
+    )):
+
+        @classmethod
+        def from_coinbase_dict(cls, x):
+            return CoinbaseOrder.Transaction(
+                id=x['id'],
+                hash=x['hash'],
+                confirmations=x['confirmations'],
+            )

@@ -6,7 +6,10 @@ from httpretty import HTTPretty, httprettified
 from decimal import Decimal
 import os.path
 
-from coinbase import CoinbaseAccount, CoinbaseAmount
+from datetime import datetime
+from dateutil.tz import tzoffset
+
+from coinbase import *
 
 
 def read(filename):
@@ -17,11 +20,13 @@ def read(filename):
 class CoinBaseAmountTests(unittest.TestCase):
 
     def setUp(self):
-        self.cb_amount = CoinbaseAmount('1.063', 'BTC')
+        self.amount = CoinbaseAmount('1.063', 'BTC')
 
-    def test_cb_amount_class(self):
-        this(Decimal(self.cb_amount)).should.equal(Decimal('1.063'))
-        this(self.cb_amount.currency).should.equal('BTC')
+    def test_amount(self):
+        this(self.amount.amount).should.equal(Decimal('1.063'))
+
+    def test_currency(self):
+        this(self.amount.currency).should.equal('BTC')
 
 
 class CoinBaseAPIKeyTests(unittest.TestCase):
@@ -71,7 +76,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
             content_type='text/json')
 
         this(self.account.receive_address).should.equal(
-            u'1DX9ECEF3FbGUtzzoQhDT8CG3nLUEA2FJt')
+            '1DX9ECEF3FbGUtzzoQhDT8CG3nLUEA2FJt')
 
     @httprettified
     def test_contacts(self):
@@ -83,9 +88,9 @@ class CoinBaseLibraryTests(unittest.TestCase):
             content_type='text/json')
 
         this(self.account.contacts).should.equal([
-            {u'email': u'alice@example.com'},
-            {u'email': u'bob@example.com'},
-            {u'email': u'eve@example.com'},
+            {'email': 'alice@example.com'},
+            {'email': 'bob@example.com'},
+            {'email': 'eve@example.com'},
         ])
 
     @httprettified
@@ -242,7 +247,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
             name='Test Button',
             price=CoinbaseAmount('20.00', 'USD'))
 
-        this(button.code).should.equal('f68a5c68d0a68679a6c6f569e651d695')
+        this(button.id).should.equal('f68a5c68d0a68679a6c6f569e651d695')
         this(button.name).should.equal('Test Button')
         this(button.price).should.equal(CoinbaseAmount('20', 'USD'))
 
@@ -260,3 +265,88 @@ class CoinBaseLibraryTests(unittest.TestCase):
         this(rates['usd_to_btc']).should.be.equal(Decimal('0.002'))
         this(rates['btc_to_usd']).should.be.equal(Decimal('499.998'))
         this(rates['bdt_to_btc']).should.be.equal(Decimal('0.000026'))
+
+    @httprettified
+    def test_orders(self):
+
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            "https://coinbase.com/api/v1/orders",
+            body=read('orders.json'),
+            content_type='text/json')
+
+        orders = self.account.orders()
+
+        this(orders[0]).should.be.equal(CoinbaseOrder(
+            id='8DJ2Z9AQ',
+            created_at=datetime(2014, 4, 21, 10, 25, 50,
+                                tzinfo=tzoffset(None, -25200)),
+            status='expired',
+            receive_address='8uREGg34ji4gn43M93cuibhbkfi6FbyF1g',
+            button=CoinbaseOrder.Button(
+                id='0fde6d456181be1279fef6879d6897a3',
+                description='warm and fuzzy',
+                name='Alpaca socks',
+                type='buy_now',
+            ),
+            custom='abcdef',
+            total=CoinbaseAmount.BtcAndNative(
+                btc=CoinbaseAmount('.01818000', 'BTC'),
+                native=CoinbaseAmount('9', 'USD'),
+            )
+        ))
+
+        this(orders[1]).should.be.equal(CoinbaseOrder(
+            id='J3KAD35D',
+            created_at=datetime(2014, 4, 21, 9, 56, 57,
+                                tzinfo=tzoffset(None, -25200)),
+            status='completed',
+            receive_address='b87nihewshngyuFUbu6fy5vbtdtryfhhj1',
+            button=CoinbaseOrder.Button(
+                id='69adb65c95af59ed5b9ab5de55a579db',
+                description='20% off',
+                name='Pineapple',
+                type='buy_now',
+            ),
+            custom='ghijkl',
+            total=CoinbaseAmount.BtcAndNative(
+                btc=CoinbaseAmount('.00799600', 'BTC'),
+                native=CoinbaseAmount('4', 'USD'),
+            ),
+            transaction=CoinbaseOrder.Transaction(
+                id='658bc586df6ef56740ac6de5',
+                hash='67b6a75d56cd5675868d5695c695865a'
+                     'b9568ef5895653a2f23454d45e4a357a',
+                confirmations=11
+            ),
+            customer_email='alice@example.com',
+        ))
+
+        this(orders[2]).should.be.equal(CoinbaseOrder(
+            id='7DAF5310',
+            created_at=datetime(2014, 04, 19, 17, 07, 37,
+                                tzinfo=tzoffset(None, -25200)),
+            status='mispaid',
+            receive_address='8Wmgg87fgu6777ihgbFTYugyjfFT686fFf',
+            button=CoinbaseOrder.Button(
+                id='586df68e5a665c6975d569e569a768c5',
+                name='Things',
+                type='buy_now',
+            ),
+            custom='xyzzy',
+            mispaid=CoinbaseAmount.BtcAndNative(
+                btc=CoinbaseAmount('.02034753', 'BTC'),
+                native=CoinbaseAmount('10.07', 'USD'),
+            ),
+            total=CoinbaseAmount.BtcAndNative(
+                btc=CoinbaseAmount('.0198', 'BTC'),
+                native=CoinbaseAmount('10', 'USD'),
+            ),
+            customer_email='bob@example.com',
+            transaction=CoinbaseOrder.Transaction(
+                id='16a64b43fe6c435a45c07a0d',
+                hash='56949ae6498b66f9865e67a6c4d75957'
+                     '8ad5986e65965f5965a695696ec59c5d',
+                confirmations=314,
+            ),
+        ))
