@@ -444,3 +444,35 @@ class CoinBaseLibraryTests(unittest.TestCase):
             ),
             refund_address='1HcmQZarSgNuGYz4r7ZkjYumiU4PujrNYk'
         ))
+
+    @httprettified
+    def test_transfers(self):
+        """
+        The example from the API doc
+        https://coinbase.com/api/doc/1.0/transfers/index.html
+        """
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            'https://coinbase.com/api/v1/transfers',
+            body=read('transfers.json'),
+            content_type='text/json')
+
+        transfers = self.account.transfers()
+
+        this(len(transfers)).should.be.equal(1)
+        this(transfers[0]).should.be.equal(CoinbaseTransfer(
+            type='Buy',
+            code='QPCUCZHR',
+            created_at=datetime(2013, 2, 27, 23, 28, 18,
+                                tzinfo=tzoffset(None, -28800)),
+            fees_coinbase=CoinbaseAmount('.14', 'USD'),
+            fees_bank=CoinbaseAmount('.15', 'USD'),
+            payout_date=datetime(2013, 3, 5, 18, 0, 0,
+                                 tzinfo=tzoffset(None, -28800)),
+            transaction_id='5011f33df8182b142400000e',
+            status='Pending',
+            btc_amount=CoinbaseAmount('1', 'BTC'),
+            subtotal_amount=CoinbaseAmount('13.55', 'USD'),
+            total_amount=CoinbaseAmount('13.84', 'USD'),
+            description='Paid for with $13.84 from Test xxxxx3111.',
+        ))

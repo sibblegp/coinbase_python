@@ -25,7 +25,8 @@ class CoinbaseTransfer(namedtuple(
                 transfer['fees']['coinbase']),
             fees_bank=CoinbaseAmount.from_coinbase_dict(
                 transfer['fees']['bank']),
-            payout_date=transfer['payout_date'],
+            payout_date=dateutil.parser.parse(
+                transfer['payout_date']),
             transaction_id=transfer.get('transaction_id', ''),
             status=transfer['status'],
             btc_amount=CoinbaseAmount.from_coinbase_dict(
