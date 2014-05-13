@@ -29,7 +29,8 @@ class CoinbaseOrder(namedtuple(
                 x['order'], prefix='total'),
             mispaid=CoinbaseAmount.BtcAndNative.from_coinbase_dict(
                 x['order'], prefix='mispaid'),
-            customer_email=x['customer'].get('email'),
+            customer_email=(x['customer'].get('email')
+                            if 'customer' in x else None),
         )
 
     class Button(namedtuple(

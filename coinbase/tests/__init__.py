@@ -256,7 +256,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         HTTPretty.register_uri(
             HTTPretty.GET,
-            "https://coinbase.com/api/v1/currencies/exchange_rates",
+            'https://coinbase.com/api/v1/currencies/exchange_rates',
             body=read('exchange_rates.json'),
             content_type='text/json')
 
@@ -271,7 +271,7 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         HTTPretty.register_uri(
             HTTPretty.GET,
-            "https://coinbase.com/api/v1/orders",
+            'https://coinbase.com/api/v1/orders',
             body=read('orders.json'),
             content_type='text/json')
 
@@ -350,3 +350,49 @@ class CoinBaseLibraryTests(unittest.TestCase):
                 confirmations=314,
             ),
         ))
+
+    @httprettified
+    def test_get_order(self):
+        """
+        The example from the API doc
+        https://coinbase.com/api/doc/1.0/orders/show.html
+        """
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            'https://coinbase.com/api/v1/orders/A7C52JQT',
+            body=read('order.json'),
+            content_type='text/json')
+
+        HTTPretty.register_uri(
+            HTTPretty.GET,
+            'https://coinbase.com/api/v1/orders/custom123',
+            body=read('order.json'),
+            content_type='text/json')
+
+        order = CoinbaseOrder(
+            id='A7C52JQT',
+            created_at=datetime(2013, 3, 11, 22, 04, 37,
+                                tzinfo=tzoffset(None, -25200)),
+            status='completed',
+            total=CoinbaseAmount.BtcAndNative(
+                btc=CoinbaseAmount('.1', 'BTC'),
+                native=CoinbaseAmount('.1', 'BTC'),
+            ),
+            custom='custom123',
+            receive_address='mgrmKftH5CeuFBU3THLWuTNKaZoCGJU5jQ',
+            button=CoinbaseOrder.Button(
+                type='buy_now',
+                name='test',
+                description='',
+                id='eec6d08e9e215195a471eae432a49fc7',
+            ),
+            transaction=CoinbaseOrder.Transaction(
+                id='513eb768f12a9cf27400000b',
+                hash='4cc5eec20cd692f3cdb7fc264a0e1d78'
+                     'b9a7e3d7b862dec1e39cf7e37ababc14',
+                confirmations=0,
+            )
+        )
+
+        this(self.account.get_order('A7C52JQT')).should.be.equal(order)
+        this(self.account.get_order('custom123')).should.be.equal(order)

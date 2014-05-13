@@ -556,3 +556,16 @@ class CoinbaseAccount(object):
 
         response = self.session.get(url=url, params=params)
         return map(CoinbaseOrder.from_coinbase_dict, response.json()['orders'])
+
+    def get_order(self, id_or_custom_field, account_id=None):
+        self._require_authentication()
+
+        url = COINBASE_ENDPOINT + '/orders/' + id_or_custom_field
+
+        params = {}
+        if account_id is not None:
+            params['account_id'] = account_id
+        params.update(self.auth_params)
+
+        response = self.session.get(url=url, params=params)
+        return CoinbaseOrder.from_coinbase_dict(response.json())
