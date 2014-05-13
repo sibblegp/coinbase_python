@@ -195,18 +195,33 @@ class CoinbaseAccount(object):
         response = self.session.get(url, params=self.auth_params)
         return response.json()['address']
 
-    @property
-    def contacts(self):
+    def contacts(self, page=None, limit=None, query=None):
         """
-        Get the account's contacts
+        Contacts the user has previously sent to or received from.
 
-        :return: List of contacts in the account
+        :param page: Can be used to page through results. Default value is 1.
+        :param limit: Number of records to return. Maximum is 1000. Default
+                      value is 25.
+        :param query: Optional partial string match to filter contacts.
+
+        :return: list of CoinbaseContact
         """
         self._require_authentication()
 
         url = COINBASE_ENDPOINT + '/contacts'
-        response = self.session.get(url, params=self.auth_params)
-        return [contact['contact'] for contact in response.json()['contacts']]
+
+        params = {}
+        if page is not None:
+            params['page'] = page
+        if limit is not None:
+            params['limit'] = limit
+        if query is not None:
+            params['query'] = query
+        params.update(self.auth_params)
+
+        response = self.session.get(url, params=params)
+        return [CoinbaseContact.from_coinbase_dict(x['contact'])
+                for x in response.json()['contacts']]
 
     def buy_price(self, qty=1):
         """

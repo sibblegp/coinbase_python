@@ -87,10 +87,10 @@ class CoinBaseLibraryTests(unittest.TestCase):
             body=read('contacts.json'),
             content_type='text/json')
 
-        this(self.account.contacts).should.equal([
-            {'email': 'alice@example.com'},
-            {'email': 'bob@example.com'},
-            {'email': 'eve@example.com'},
+        this(self.account.contacts()).should.equal([
+            CoinbaseContact(email='alice@example.com'),
+            CoinbaseContact(email='bob@example.com'),
+            CoinbaseContact(email='eve@example.com'),
         ])
 
     @httprettified
