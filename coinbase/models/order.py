@@ -1,15 +1,19 @@
-from .util import namedtuple, optional
-
 import dateutil.parser
+import json
 
+from .util import namedtuple, optional
 from . import CoinbaseAmount
 
 
 class CoinbaseOrder(namedtuple(
     'CoinbaseOrder',
     optional='id created_at status receive_address button '
-             'transaction custom total mispaid customer_email'
+             'transaction custom total mispaid customer refund_address'
 )):
+
+    @classmethod
+    def parse_callback(cls, s):
+        return CoinbaseOrder.from_coinbase_dict(json.loads(s))
 
     @classmethod
     def from_coinbase_dict(cls, x):
@@ -29,8 +33,20 @@ class CoinbaseOrder(namedtuple(
                 x['order'], prefix='total'),
             mispaid=CoinbaseAmount.BtcAndNative.from_coinbase_dict(
                 x['order'], prefix='mispaid'),
-            customer_email=(x['customer'].get('email')
-                            if 'customer' in x else None),
+            customer=(
+                # In the /orders API, customer is on the root object
+                optional(CoinbaseOrder.Customer.from_coinbase_dict)(
+                    x.get('customer')
+                )
+                or
+                # For order callbacks (in the documentation, at least;
+                # haven't confirmed for an actual callback), customer
+                # is on the order object.
+                optional(CoinbaseOrder.Customer.from_coinbase_dict)(
+                    x['order'].get('customer')
+                )
+            ),
+            refund_address=x['order'].get('refund_address'),
         )
 
     class Button(namedtuple(
@@ -59,4 +75,16 @@ class CoinbaseOrder(namedtuple(
                 id=x['id'],
                 hash=x['hash'],
                 confirmations=x['confirmations'],
+            )
+
+    class Customer(namedtuple(
+        'CoinbaseOrder_Customer',
+        optional='email shipping_address'
+    )):
+
+        @classmethod
+        def from_coinbase_dict(cls, x):
+            return CoinbaseOrder.Customer(
+                email=x.get('email'),
+                shipping_address=x.get('shipping_address'),
             )

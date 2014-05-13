@@ -293,7 +293,8 @@ class CoinBaseLibraryTests(unittest.TestCase):
             total=CoinbaseAmount.BtcAndNative(
                 btc=CoinbaseAmount('.01818000', 'BTC'),
                 native=CoinbaseAmount('9', 'USD'),
-            )
+            ),
+            customer=CoinbaseOrder.Customer(),
         ))
 
         this(orders[1]).should.be.equal(CoinbaseOrder(
@@ -319,7 +320,9 @@ class CoinBaseLibraryTests(unittest.TestCase):
                      'b9568ef5895653a2f23454d45e4a357a',
                 confirmations=11
             ),
-            customer_email='alice@example.com',
+            customer=CoinbaseOrder.Customer(
+                email='alice@example.com',
+            ),
         ))
 
         this(orders[2]).should.be.equal(CoinbaseOrder(
@@ -342,7 +345,9 @@ class CoinBaseLibraryTests(unittest.TestCase):
                 btc=CoinbaseAmount('.0198', 'BTC'),
                 native=CoinbaseAmount('10', 'USD'),
             ),
-            customer_email='bob@example.com',
+            customer=CoinbaseOrder.Customer(
+                email='bob@example.com',
+            ),
             transaction=CoinbaseOrder.Transaction(
                 id='16a64b43fe6c435a45c07a0d',
                 hash='56949ae6498b66f9865e67a6c4d75957'
@@ -396,3 +401,47 @@ class CoinBaseLibraryTests(unittest.TestCase):
 
         this(self.account.get_order('A7C52JQT')).should.be.equal(order)
         this(self.account.get_order('custom123')).should.be.equal(order)
+
+    @httprettified
+    def test_order_callback(self):
+        """
+        The example from the callbacks doc
+        https://coinbase.com/docs/merchant_tools/callbacks
+        """
+
+        order = CoinbaseOrder.parse_callback(read('order_callback.json'))
+
+        this(order).should.be.equal(CoinbaseOrder(
+            id='5RTQNACF',
+            created_at=datetime(2012, 12, 9, 21, 23, 41,
+                                tzinfo=tzoffset(None, -28800)),
+            status='completed',
+            total=CoinbaseAmount.BtcAndNative(
+                btc=CoinbaseAmount('1', 'BTC'),
+                native=CoinbaseAmount('12.53', 'USD'),
+            ),
+            custom='order1234',
+            receive_address='1NhwPYPgoPwr5hynRAsto5ZgEcw1LzM3My',
+            button=CoinbaseOrder.Button(
+                type='buy_now',
+                name='Alpaca Socks',
+                description='The ultimate in lightweight footwear',
+                id='5d37a3b61914d6d0ad15b5135d80c19f',
+            ),
+            transaction=CoinbaseOrder.Transaction(
+                id='514f18b7a5ea3d630a00000f',
+                hash='4a5e1e4baab89f3a32518a88c31bc87f'
+                     '618f76673e2cc77ab2127b7afdeda33b',
+                confirmations=0,
+            ),
+            customer=CoinbaseOrder.Customer(
+                email='coinbase@example.com',
+                shipping_address=[
+                    'John Smith',
+                    '123 Main St.',
+                    'Springfield, OR 97477',
+                    'United States',
+                ]
+            ),
+            refund_address='1HcmQZarSgNuGYz4r7ZkjYumiU4PujrNYk'
+        ))
