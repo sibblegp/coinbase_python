@@ -10,6 +10,39 @@ class CoinbaseOrder(namedtuple(
     optional='id created_at status receive_address button '
              'transaction custom total mispaid customer refund_address'
 )):
+    """
+    status
+            These rules are inferred from experimentation.
+            - An order's status is one of:
+              "pending", "complete", "mispaid", "expired"
+            - Orders are be created through the API, or by a user clicking a
+              payment button. In the latter case, the order is only behind
+              the scenes; it is hidden from the API until a payment is made.
+            - All orders have an initial status of "pending".
+            - When a "pending" order receives a payment in the correct amount,
+              its status permanently becomes "complete".
+            - When a "pending" order receives a payment in an incorrect amount,
+              its status permanently becomes "mispaid".
+            - When a "pending" order's time runs out, its status permanently
+              becomes "expired".
+    total
+            CoinbaseAmount.BtcAndNative. This is the order's price; in other
+            words, the amount that Coinbase expects to receive for the order's
+            status to become "complete".
+    mispaid
+            CoinbaseAmount.BtcAndNative. This field is present if the order's
+            status is "mispaid" or "expired". Its value is the amount of the
+            most recent payment made on this order.
+    refund_address
+            A refund address on off-blockchain order payments.
+            "This is an experimental feature."
+    button
+            CoinbaseOrder.Button
+    transaction
+            CoinbaseOrder.Transaction
+    customer
+            CoinbaseOrder.Customer
+    """
 
     @classmethod
     def parse_callback(cls, s):
