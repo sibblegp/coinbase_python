@@ -2,7 +2,7 @@ __author__ = 'gsibble'
 
 from sure import it, this, those, these
 import unittest
-from httpretty import HTTPretty, httprettified
+from httpretty import HTTPretty, httprettified, last_request
 from decimal import Decimal
 import os.path
 
@@ -235,21 +235,117 @@ class CoinBaseLibraryTests(unittest.TestCase):
         this(user.balance).should.equal(CoinbaseAmount('1225.86084181', 'BTC'))
 
     @httprettified
-    def test_creating_a_button(self):
+    def test_creating_a_button_1(self):
+        """
+        Create a button using all of the default values.
+        """
 
         HTTPretty.register_uri(
             HTTPretty.POST,
             'https://coinbase.com/api/v1/buttons',
-            body=read('button.json'),
+            body=read('button1.json'),
             content_type='text/json')
 
-        button = self.account.create_button(
-            name='Test Button',
-            price=CoinbaseAmount('20.00', 'USD'))
+        button = self.account.create_button(CoinbasePaymentButton(
+            name='a', price=CoinbaseAmount('5', 'USD')))
 
-        this(button.id).should.equal('f68a5c68d0a68679a6c6f569e651d695')
-        this(button.name).should.equal('Test Button')
-        this(button.price).should.equal(CoinbaseAmount('20', 'USD'))
+        this(json.loads(last_request().body)).should.equal({
+            'button': {
+                'name': 'a',
+                'price_string': '5',
+                'price_currency_iso': 'USD',
+            }
+        })
+
+        this(button).should.equal(CoinbasePaymentButton(
+            id='f68a5c68d0a68679a6c6f569e651d695',
+            name='a',
+            price=CoinbaseAmount('5', 'USD'),
+            auto_redirect=False,
+            custom='',
+            description='',
+            include_address=False,
+            include_email=False,
+            style='buy_now_large',
+            text='Pay With Bitcoin',
+            type='buy_now',
+            variable_price=False,
+        ))
+
+    @httprettified
+    def test_creating_a_button_2(self):
+        """
+        Create a subscription button with suggested prices.
+        """
+
+        HTTPretty.register_uri(
+            HTTPretty.POST,
+            'https://coinbase.com/api/v1/buttons',
+            body=read('button2.json'),
+            content_type='text/json')
+
+        button_spec = CoinbasePaymentButton(
+            name='abc def',
+            description='ghi jkl',
+            text='lol',
+            custom='12345x',
+            custom_secure=True,
+            price=CoinbaseAmount('102.76', 'USD'),
+            type='subscription',
+            repeat='monthly',
+            style='subscription_small',
+            callback_url='https://example.com/callback',
+            success_url='https://example.com/success',
+            cancel_url='https://example.com/cancel',
+            info_url='https://example.com/info',
+            auto_redirect=True,
+            suggested_prices=[
+                Decimal('5'),
+                Decimal('20.25'),
+                Decimal('250'),
+            ],
+            include_address=True,
+            include_email=True,
+            variable_price=True,
+        )
+
+        button = self.account.create_button(button_spec)
+
+        this(json.loads(last_request().body)).should.equal({
+            'button': {
+                'name': 'abc def',
+                'description': 'ghi jkl',
+                'text': 'lol',
+                'custom': '12345x',
+                'custom_secure': True,
+                'price_string': '102.76',
+                'price_currency_iso': 'USD',
+                'type': 'subscription',
+                'repeat': 'monthly',
+                'style': 'subscription_small',
+                'callback_url': 'https://example.com/callback',
+                'success_url': 'https://example.com/success',
+                'cancel_url': 'https://example.com/cancel',
+                'info_url': 'https://example.com/info',
+                'auto_redirect': True,
+                'choose_price': True,
+                'price1': '5',
+                'price2': '20.25',
+                'price3': '250',
+                'include_address': True,
+                'include_email': True,
+                'variable_price': True,
+            }
+        })
+
+        this(button).should.equal(button_spec._replace(
+            id='089e75679117f0a59524fa0c2c2aae59',
+            # Coinbase's response doesn't include "price1", "price2", "price3",
+            # "repeat", "custom_secure". It's unclear if that's intentional.
+            suggested_prices=[],
+            custom_secure=None,
+            repeat=None,
+        ))
 
     @httprettified
     def test_exchange_rates(self):

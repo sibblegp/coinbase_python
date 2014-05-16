@@ -10,9 +10,9 @@
         "include_address": false,
         "include_email": false,
         "info_url": null,
-        "name": "Test Button",
+        "name": "a",
         "price": {
-            "cents": 2000,
+            "cents": 500,
             "currency_iso": "USD"
         },
         "style": "buy_now_large",
