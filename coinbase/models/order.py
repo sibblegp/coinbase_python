@@ -48,6 +48,9 @@ class CoinbaseOrder(namedtuple(
     def parse_callback(cls, s):
         return CoinbaseOrder.from_coinbase_dict(json.loads(s))
 
+    def render_callback(self):
+        return json.dumps(self.to_coinbase_dict())
+
     @classmethod
     def from_coinbase_dict(cls, x):
 
@@ -71,6 +74,25 @@ class CoinbaseOrder(namedtuple(
             refund_address=x['order'].get('refund_address'),
         )
 
+    def to_coinbase_dict(self):
+        x = {
+            'order': {
+                'id': self.id,
+                'created_at': self.created_at.strftime('%Y-%m-%dT%H:%M:%S%z'),
+                'status': self.status,
+                'total_btc': self.total.btc.to_coinbase_dict(),
+                'total_native': self.total.native.to_coinbase_dict(),
+                'custom': self.custom,
+                'receive_address': self.receive_address,
+                'button': self.button.to_coinbase_dict(),
+            }
+        }
+        if self.transaction is not None:
+            x['order']['transaction'] = self.transaction.to_coinbase_dict(),
+        if self.customer is not None:
+            x['customer'] = self.customer.to_coinbase_dict()
+        return x
+
     class Button(namedtuple(
         'CoinbaseOrder_Button',
         'id type',
@@ -79,12 +101,26 @@ class CoinbaseOrder(namedtuple(
 
         @classmethod
         def from_coinbase_dict(cls, x):
-            return CoinbaseOrder.Button(
-                id=x['id'],
-                type=x['type'],
-                name=x['name'],
-                description=x['description'],
-            )
+            kwargs = {}
+            for key in ['id', 'type', 'name', 'description']:
+                kwargs[key] = x[key]
+            return CoinbaseOrder.Button(**kwargs)
+
+        def to_coinbase_dict(self):
+            x = {}
+            for key in ['id', 'type', 'name', 'description']:
+                x[key] = getattr(self, key) or ''
+            return x
+
+        @classmethod
+        def from_coinbase_payment_button(cls, button):
+            """
+            button - CoinbasePaymentButton
+            """
+            kwargs = {}
+            for key in ['id', 'type', 'name', 'description']:
+                kwargs[key] = getattr(button, key)
+            return CoinbaseOrder.Button(**kwargs)
 
     class Transaction(namedtuple(
         'CoinbaseOrder_Transaction',
@@ -93,11 +129,16 @@ class CoinbaseOrder(namedtuple(
 
         @classmethod
         def from_coinbase_dict(cls, x):
-            return CoinbaseOrder.Transaction(
-                id=x['id'],
-                hash=x['hash'],
-                confirmations=x['confirmations'],
-            )
+            kwargs = {}
+            for key in ['id', 'hash', 'confirmations']:
+                kwargs[key] = x[key]
+            return CoinbaseOrder.Transaction(**kwargs)
+
+        def to_coinbase_dict(self):
+            x = {}
+            for key in ['id', 'hash', 'confirmations']:
+                x[key] = getattr(self, key)
+            return x
 
     class Customer(namedtuple(
         'CoinbaseOrder_Customer',
@@ -106,7 +147,15 @@ class CoinbaseOrder(namedtuple(
 
         @classmethod
         def from_coinbase_dict(cls, x):
-            return CoinbaseOrder.Customer(
-                email=x.get('email'),
-                shipping_address=x.get('shipping_address'),
-            )
+            kwargs = {}
+            for key in ['email', 'shipping_address']:
+                kwargs[key] = x.get(key)
+            return CoinbaseOrder.Customer(**kwargs)
+
+        def to_coinbase_dict(self):
+            x = {}
+            for key in ['email', 'shipping_address']:
+                value = getattr(self, key)
+                if value is not None:
+                    x[value] = key
+            return x
