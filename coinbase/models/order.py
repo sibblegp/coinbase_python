@@ -14,16 +14,16 @@ class CoinbaseOrder(namedtuple(
     status
             These rules are inferred from experimentation.
             - An order's status is one of:
-              "pending", "complete", "mispaid", "expired"
+              "new", "complete", "mispaid", "expired"
             - Orders are be created through the API, or by a user clicking a
               payment button. In the latter case, the order is only behind
               the scenes; it is hidden from the API until a payment is made.
-            - All orders have an initial status of "pending".
-            - When a "pending" order receives a payment in the correct amount,
+            - All orders have an initial status of "new".
+            - When a "new" order receives a payment in the correct amount,
               its status permanently becomes "complete".
-            - When a "pending" order receives a payment in an incorrect amount,
+            - When a "new" order receives a payment in an incorrect amount,
               its status permanently becomes "mispaid".
-            - When a "pending" order's time runs out, its status permanently
+            - When a "new" order's time runs out, its status permanently
               becomes "expired".
     total
             CoinbaseAmount.BtcAndNative. This is the order's price; in other
