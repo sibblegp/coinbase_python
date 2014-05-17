@@ -40,11 +40,28 @@ import requests
 import httplib2
 import json
 import os
+import re
 
 from decimal import Decimal
 
 from coinbase.config import COINBASE_ENDPOINT
 from coinbase.models import *
+from coinbase.errors import *
+
+
+url_path_component_regex = re.compile('^[0-9a-z_\-]+$', re.I)
+
+
+def coinbase_url(*args):
+
+    args = map(str, args)
+
+    # make sure we don't concatenate anything too weird into the url
+    for c in args:
+        if not url_path_component_regex.match(c):
+            raise UrlValueError(c)
+
+    return '/'.join([COINBASE_ENDPOINT] + args)
 
 
 class CoinbaseAccount(object):
@@ -177,10 +194,9 @@ class CoinbaseAccount(object):
         """
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/account/balance'
+        url = coinbase_url('account', 'balance')
         response = self.session.get(url, params=self.auth_params)
-        results = response.json()
-        return CoinbaseAmount.from_coinbase_dict(results)
+        return CoinbaseAmount.from_coinbase_dict(response.json())
 
     @property
     def receive_address(self):
@@ -191,7 +207,7 @@ class CoinbaseAccount(object):
         """
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/account/receive_address'
+        url = coinbase_url('account', 'receive_address')
         response = self.session.get(url, params=self.auth_params)
         return response.json()['address']
 
@@ -208,7 +224,7 @@ class CoinbaseAccount(object):
         """
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/contacts'
+        url = coinbase_url('contacts')
 
         params = {}
         if page is not None:
@@ -229,7 +245,7 @@ class CoinbaseAccount(object):
         :param qty: Quantity of BitCoin to price
         :return: CoinbaseAmount with currency attribute
         """
-        url = COINBASE_ENDPOINT + '/prices/buy'
+        url = coinbase_url('prices', 'buy')
         params = {'qty': qty}
         response = self.session.get(url, params=params)
         results = response.json()
@@ -241,7 +257,7 @@ class CoinbaseAccount(object):
         :param qty: Quantity of BitCoin to price
         :return: CoinbaseAmount with currency attribute
         """
-        url = COINBASE_ENDPOINT + '/prices/sell'
+        url = coinbase_url('prices', 'sell')
         params = {'qty': qty}
         response = self.session.get(url, params=params)
         results = response.json()
@@ -261,7 +277,7 @@ class CoinbaseAccount(object):
         self._require_allow_transfers()
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/buys'
+        url = coinbase_url('buys')
         request_data = {
             "qty": qty,
             "agree_btc_amount_varies": pricevaries
@@ -286,7 +302,7 @@ class CoinbaseAccount(object):
         self._require_allow_transfers()
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/sells'
+        url = coinbase_url('sells')
         request_data = {
             "qty": qty,
         }
@@ -312,7 +328,7 @@ class CoinbaseAccount(object):
         self._require_allow_transfers()
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/transactions/request_money'
+        url = coinbase_url('transactions', 'request_money')
 
         request_data = {
             'transaction': {
@@ -351,7 +367,7 @@ class CoinbaseAccount(object):
         self._require_allow_transfers()
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/transactions/send_money'
+        url = coinbase_url('transactions', 'send_money')
 
         request_data = {
             'transaction': {
@@ -386,7 +402,7 @@ class CoinbaseAccount(object):
         """
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/transactions'
+        url = coinbase_url('transactions')
         pages = count / 30 + 1
         transactions = []
 
@@ -418,7 +434,7 @@ class CoinbaseAccount(object):
         """
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/transfers'
+        url = coinbase_url('transfers')
         pages = count / 30 + 1
         transfers = []
 
@@ -449,7 +465,7 @@ class CoinbaseAccount(object):
         """
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/transactions/' + str(transaction_id)
+        url = coinbase_url('transactions', transaction_id)
         response = self.session.get(url, params=self.auth_params)
         results = response.json()
 
@@ -467,7 +483,7 @@ class CoinbaseAccount(object):
         """
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/users'
+        url = coinbase_url('users')
         response = self.session.get(url, params=self.auth_params)
         results = response.json()
 
@@ -481,7 +497,7 @@ class CoinbaseAccount(object):
         """
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/account/generate_receive_address'
+        url = coinbase_url('account', 'generate_receive_address')
         request_data = {
             'address': {
                 'callback_url': callback_url
@@ -506,7 +522,7 @@ class CoinbaseAccount(object):
         """
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/buttons'
+        url = coinbase_url('buttons')
 
         request_data = {
             'button': button.to_coinbase_dict()
@@ -535,7 +551,7 @@ class CoinbaseAccount(object):
         currencies. It has keys for both btc_to_xxx and xxx_to_btc.
         :return: Dict with str keys and Decimal values
         """
-        url = COINBASE_ENDPOINT + '/currencies/exchange_rates'
+        url = coinbase_url('currencies', 'exchange_rates')
         rates = json.loads(requests.get(url).content)
         return dict(((k, Decimal(v)) for k, v in rates.iteritems()))
 
@@ -551,7 +567,7 @@ class CoinbaseAccount(object):
         """
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/orders'
+        url = coinbase_url('orders')
 
         params = {}
         if account_id is not None:
@@ -566,7 +582,7 @@ class CoinbaseAccount(object):
     def get_order(self, id_or_custom_field, account_id=None):
         self._require_authentication()
 
-        url = COINBASE_ENDPOINT + '/orders/' + id_or_custom_field
+        url = coinbase_url('orders', id_or_custom_field)
 
         params = {}
         if account_id is not None:

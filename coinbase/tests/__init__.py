@@ -10,6 +10,7 @@ from datetime import datetime
 from dateutil.tz import tzoffset
 
 from coinbase import *
+from coinbase.errors import *
 
 
 def read(filename):
@@ -53,6 +54,10 @@ class CoinBaseLibraryTests(unittest.TestCase):
     def setUp(self):
         self.account = CoinbaseAccount(
             oauth2_credentials=read('oauth2_credentials.json'))
+
+    def test_url_injection_attempt(self):
+        this(lambda: self.account.get_order('../account/balance')) \
+            .should.throw(UrlValueError)
 
     @httprettified
     def test_retrieve_balance(self):

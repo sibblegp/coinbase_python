@@ -1,0 +1,2 @@
+class UrlValueError(ValueError):
+    pass
