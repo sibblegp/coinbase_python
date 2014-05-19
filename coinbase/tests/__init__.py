@@ -577,3 +577,81 @@ class CoinBaseLibraryTests(unittest.TestCase):
             total_amount=CoinbaseAmount('13.84', 'USD'),
             description='Paid for with $13.84 from Test xxxxx3111.',
         ))
+
+    @httprettified
+    def test_create_button_and_order(self):
+        """
+        The example from https://coinbase.com/api/doc/1.0/orders/create.html
+        """
+        HTTPretty.register_uri(
+            HTTPretty.POST,
+            'https://coinbase.com/api/v1/orders',
+            body=read('order_pending.json'),
+            content_type='text/json')
+
+        order = self.account.create_button_and_order(CoinbasePaymentButton(
+            name='test',
+            type='buy_now',
+            price=CoinbaseAmount('1.23', 'USD'),
+        ))
+
+        this(json.loads(last_request().body)).should.equal({
+            'button': {
+                'name': 'test',
+                'type': 'buy_now',
+                'price_string': '1.23',
+                'price_currency_iso': 'USD'
+            }
+        })
+
+        this(order).should.equal(CoinbaseOrder(
+            id='8QNULQFE',
+            created_at=datetime(2014, 02, 04, 23, 36, 30,
+                                tzinfo=tzoffset(None, -28800)),
+            status='new',
+            total=CoinbaseAmount.BtcAndNative(
+                btc=CoinbaseAmount('.12300000', 'BTC'),
+                native=CoinbaseAmount('1.23', 'USD'),
+            ),
+            receive_address='mnskjZs57dBAmeU2n4csiRKoQcGRF4tpxH',
+            button=CoinbaseOrder.Button(
+                type='buy_now',
+                name='test',
+                id='1741b3be1eb5dc50625c48851a94ae13',
+            ),
+        ))
+
+    @httprettified
+    def test_create_order_from_button(self):
+        """
+        The example from
+        https://coinbase.com/api/doc/1.0/buttons/create_order.html
+        """
+        HTTPretty.register_uri(
+            HTTPretty.POST,
+            'https://coinbase.com/api/v1/buttons/'
+            '93865b9cae83706ae59220c013bc0afd/create_order',
+            body=read('order_pending.json'),
+            content_type='text/json')
+
+        order = self.account.create_order_from_button(
+            button_id='93865b9cae83706ae59220c013bc0afd')
+
+        this(last_request().body).should.equal('')
+
+        this(order).should.equal(CoinbaseOrder(
+            id='8QNULQFE',
+            created_at=datetime(2014, 02, 04, 23, 36, 30,
+                                tzinfo=tzoffset(None, -28800)),
+            status='new',
+            total=CoinbaseAmount.BtcAndNative(
+                btc=CoinbaseAmount('.12300000', 'BTC'),
+                native=CoinbaseAmount('1.23', 'USD'),
+            ),
+            receive_address='mnskjZs57dBAmeU2n4csiRKoQcGRF4tpxH',
+            button=CoinbaseOrder.Button(
+                type='buy_now',
+                name='test',
+                id='1741b3be1eb5dc50625c48851a94ae13',
+            ),
+        ))

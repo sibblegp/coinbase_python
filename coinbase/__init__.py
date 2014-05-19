@@ -591,3 +591,24 @@ class CoinbaseAccount(object):
 
         response = self.session.get(url=url, params=params)
         return CoinbaseOrder.from_coinbase_dict(response.json())
+
+    def create_button_and_order(self, button):
+        self._require_authentication()
+
+        url = coinbase_url('orders')
+
+        request_data = {
+            'button': button.to_coinbase_dict()
+        }
+
+        response = self.session.post(url=url, data=json.dumps(request_data),
+                                     params=self.auth_params)
+        return CoinbaseOrder.from_coinbase_dict(response.json())
+
+    def create_order_from_button(self, button_id):
+        self._require_authentication()
+
+        url = coinbase_url('buttons', button_id, 'create_order')
+
+        response = self.session.post(url=url, params=self.auth_params)
+        return CoinbaseOrder.from_coinbase_dict(response.json())
