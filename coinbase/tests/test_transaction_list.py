@@ -1,3 +1,23 @@
+from sure import this
+from unittest import TestCase
+
+from . import account_setup
+from .http_mocking import *
+
+
+@with_http_mocking
+class TransactionListTest(TestCase):
+
+    def setUp(self):
+        mock_http('GET https://coinbase.com/api/v1/transactions',
+                  response_body)
+
+    def test_transaction_list_with_oauth(self):
+        account = account_setup.with_oauth()
+        this(account.transactions()).should.be.an(list)
+
+
+response_body = """
 {
     "balance": {
         "amount": "0.00000000",
@@ -67,9 +87,10 @@
                     "currency": "BTC"
                 },
                 "created_at": "2013-03-21T17:02:57-07:00",
-                "hsh": "42dd65a18dbea0779f32021663e60b1fab8ee0f859db7172a078d4528e01c6c8",
+                "hsh":
+"42dd65a18dbea0779f32021663e60b1fab8ee0f859db7172a078d4528e01c6c8",
                 "id": "514b9fb1b8377ee36500000d",
-                "notes": "You gave me this a while ago. It's turning into a fair amount of cash and thought you might want it back :) Building something on your API this weekend. Take care!",
+                "notes": "You gave me this a while ago.",
                 "recipient": {
                     "email": "brian@coinbase.com",
                     "id": "4efec8d7bedd320001000003",
@@ -92,7 +113,8 @@
                     "currency": "BTC"
                 },
                 "created_at": "2012-11-09T23:27:07-08:00",
-                "hsh": "ac9b0ffbe36dbe12c5ca047a5bdf9cadca3c9b89b74751dff83b3ac863ccc0b3",
+                "hsh":
+"ac9b0ffbe36dbe12c5ca047a5bdf9cadca3c9b89b74751dff83b3ac863ccc0b3",
                 "id": "509e01cb12838e0200000224",
                 "notes": "",
                 "recipient": {
@@ -112,3 +134,4 @@
         }
     ]
 }
+"""

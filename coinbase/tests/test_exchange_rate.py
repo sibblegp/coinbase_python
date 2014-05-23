@@ -1,3 +1,38 @@
+from sure import this
+from unittest import TestCase
+
+from decimal import Decimal
+
+from . import account_setup
+from .http_mocking import *
+
+
+@with_http_mocking
+class ExchangeRateTest(TestCase):
+
+    def setUp(self):
+        mock_http('GET https://coinbase.com/api/v1/currencies/exchange_rates',
+                  response_body)
+
+    def test_exchange_rates_without_auth(self):
+        self.go(account_setup.without_auth())
+
+    def test_exchange_rates_with_key(self):
+        self.go(account_setup.with_key())
+
+    def test_exchange_rates_with_oauth(self):
+        self.go(account_setup.with_oauth())
+
+    def go(self, account):
+        rates = account.exchange_rates
+        this(last_request_params()).should.equal({})
+        this(rates['gbp_to_usd']).should.be.equal(Decimal('1.648093'))
+        this(rates['usd_to_btc']).should.be.equal(Decimal('0.002'))
+        this(rates['btc_to_usd']).should.be.equal(Decimal('499.998'))
+        this(rates['bdt_to_btc']).should.be.equal(Decimal('0.000026'))
+
+
+response_body = """
 {
     "aed_to_btc": "0.000545",
     "aed_to_usd": "0.272258",
@@ -632,3 +667,4 @@
     "zwl_to_btc": "6.0e-06",
     "zwl_to_usd": "0.003102"
 }
+"""

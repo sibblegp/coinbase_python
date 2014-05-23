@@ -1,3 +1,26 @@
+from sure import this
+from unittest import TestCase
+
+from coinbase import CoinbaseAmount
+from . import account_setup
+from .http_mocking import *
+
+
+@with_http_mocking
+class SendToEmailTest(TestCase):
+
+    def setUp(self):
+        mock_http('POST https://coinbase.com/api/v1/transactions/send_money',
+                  response_body)
+
+    def test_send_bitcoin_to_email_address_with_key(self):
+        account = account_setup.with_key()
+        tx = account.send(to_address='bob@example.com',
+                          amount=CoinbaseAmount('0.1', 'BTC'))
+        this(tx.recipient.email).should.equal('bob@example.com')
+
+
+response_body = """
 {
     "success": true,
     "transaction": {
@@ -24,3 +47,4 @@
         "status": "pending"
     }
 }
+"""
