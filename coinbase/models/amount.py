@@ -35,6 +35,9 @@ class CoinbaseAmount(namedtuple(
             'currency_iso': self.currency,
         }
 
+    def convert(self, currency, exchange_rate):
+        return CoinbaseAmount(self.amount * exchange_rate, currency)
+
     class BtcAndNative(namedtuple('CoinbaseAmount_BtcAndNative', 'btc native')):
 
         @classmethod
