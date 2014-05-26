@@ -31,6 +31,13 @@ class ExchangeRateTest(TestCase):
         this(rates['btc_to_usd']).should.be.equal(Decimal('499.998'))
         this(rates['bdt_to_btc']).should.be.equal(Decimal('0.000026'))
 
+    def test_get_exchange_rate(self):
+        account = account_setup.without_auth()
+        this(account.get_exchange_rate(
+            from_currency='BTC',
+            to_currency='USD'
+        )).should.be.equal(Decimal('499.998'))
+
 
 response_body = """
 {
