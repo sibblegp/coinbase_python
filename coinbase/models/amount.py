@@ -32,7 +32,7 @@ class CoinbaseAmount(namedtuple(
     def to_coinbase_dict(self):
         return {
             'amount': str(self.amount),
-            'currency_iso': self.currency_iso,
+            'currency_iso': self.currency,
         }
 
     class BtcAndNative(namedtuple('CoinbaseAmount_BtcAndNative', 'btc native')):
