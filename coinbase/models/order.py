@@ -119,7 +119,7 @@ class CoinbaseOrder(namedtuple(
             """
             kwargs = {}
             for key in ['id', 'type', 'name', 'description']:
-                kwargs[key] = getattr(button, key)
+                kwargs[key] = getattr(button, key) or ''
             return CoinbaseOrder.Button(**kwargs)
 
     class Transaction(namedtuple(
