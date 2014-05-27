@@ -3,6 +3,9 @@ Unofficial Coinbase Python Library
 
 Python Library for the Coinbase API for use with three legged oAuth2 and classic API key usage
 
+.. image:: https://secure.travis-ci.org/scholrly/neo4django.png?branch=master
+[![Travis build status](https://travis-ci.org/sibblegp/coinbase_python.png?branch=master)](https://travis-ci.org/sibblegp/coinbase)
+
 ## Version
 
 0.2.0
