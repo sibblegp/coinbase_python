@@ -88,7 +88,7 @@ class CoinbaseOrder(namedtuple(
             }
         }
         if self.transaction is not None:
-            x['order']['transaction'] = self.transaction.to_coinbase_dict(),
+            x['order']['transaction'] = self.transaction.to_coinbase_dict()
         if self.customer is not None:
             x['customer'] = self.customer.to_coinbase_dict()
         return x
@@ -157,5 +157,5 @@ class CoinbaseOrder(namedtuple(
             for key in ['email', 'shipping_address']:
                 value = getattr(self, key)
                 if value is not None:
-                    x[value] = key
+                    x[key] = value
             return x

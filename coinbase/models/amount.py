@@ -32,7 +32,7 @@ class CoinbaseAmount(namedtuple(
     def to_coinbase_dict(self):
         return {
             'amount': str(self.amount),
-            'currency_iso': self.currency,
+            'currency': self.currency,
         }
 
     def convert(self, currency, exchange_rate):
