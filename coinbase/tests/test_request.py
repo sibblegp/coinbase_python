@@ -95,6 +95,6 @@ expected_transaction = CoinbaseTransaction(
         name='alice@example.com',
         email='alice@example.com',
     ),
-    status='pending',
+    status=CoinbaseTransaction.Status.pending,
     recipient_type='coinbase',
 )

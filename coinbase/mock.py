@@ -65,7 +65,7 @@ class CoinbaseAccountMock(object):
             id=random_transaction_id(),
             created_at=now,
             amount=CoinbaseAmount(qty, 'BTC'),
-            status='pending',
+            status=CoinbaseTransaction.Status.pending,
         )
         transfer = CoinbaseTransfer(
             transaction_id=transaction.id,
@@ -87,7 +87,7 @@ class CoinbaseAccountMock(object):
             created_at=get_now(),
             notes=notes,
             amount=amount,
-            status='pending',
+            status=CoinbaseTransaction.Status.pending,
             request=False,
             sender=self._me,
             recipient=None,  # todo
@@ -148,7 +148,7 @@ class CoinbaseAccountMock(object):
         order = CoinbaseOrder(
             id=random_order_id(),
             created_at=get_now(),
-            status='new',
+            status=CoinbaseOrder.Status.pending,
             receive_address=random_bitcoin_address(),
             button=CoinbaseOrder.Button.from_coinbase_payment_button(button),
             custom=button.custom,
@@ -166,10 +166,11 @@ class MockControl(namedtuple('CoinbaseAccount_MockControl', 'account')):
     def complete_transaction(self, transaction_id):
 
         transaction = self.modify_transaction(
-            transaction_id, status='complete')
+            transaction_id, status=CoinbaseTransaction.Status.complete)
 
         if transaction_id in self.account._transfers:
-            self.modify_transfer(transaction_id, status='complete')
+            self.modify_transfer(transaction_id,
+                                 status=CoinbaseTransfer.Status.complete)
 
         send = (transaction.sender is not None and
                 transaction.sender.id == self.account._me.id)
@@ -214,7 +215,7 @@ class MockControl(namedtuple('CoinbaseAccount_MockControl', 'account')):
             id=random_transaction_id(),
             created_at=now,
             amount=amount.btc,
-            status='complete',
+            status=CoinbaseTransaction.Status.complete,
         )
 
         self.account._transactions[transaction.id] = transaction
@@ -235,12 +236,14 @@ class MockControl(namedtuple('CoinbaseAccount_MockControl', 'account')):
                 )
             )
 
-            if order.status == 'new':
+            if order.status == CoinbaseOrder.Status.pending:
                 amount_is_correct = amount.btc == order.total.btc
-                status = 'complete' if amount_is_correct else 'mispaid'
+                status = (CoinbaseOrder.Status.complete if amount_is_correct
+                          else CoinbaseOrder.Status.mispaid)
                 order = self.modify_order(order.id, status=status)
 
-            if order.status in ['mispaid', 'expired']:
+            if order.status in [CoinbaseOrder.Status.mispaid,
+                                CoinbaseOrder.Status.expired]:
                 order = self.modify_order(order.id, mispaid=amount)
 
             if button.callback_url is not None:

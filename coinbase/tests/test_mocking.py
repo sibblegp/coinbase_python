@@ -18,14 +18,14 @@ class CoinbaseAccountMockTests(unittest.TestCase):
         # Buy some bitcoin
         transaction_id = self.account.buy_btc('3.5').transaction_id
         this(self.account.get_transaction(transaction_id).status) \
-            .should.equal('pending')
+            .should.equal(CoinbaseTransaction.Status.pending)
         this(len(self.account.transactions()),).should.equal(1)
         this(self.account.balance).should.equal(Decimal('0'))
 
         # Complete the transaction
         self.account.mock.complete_transaction(transaction_id)
         this(self.account.get_transaction(transaction_id).status) \
-            .should.equal('complete')
+            .should.equal(CoinbaseTransaction.Status.complete)
         this(len(self.account.transactions())).should.equal(1)
         this(self.account.balance).should.equal(Decimal('3.5'))
 
@@ -36,14 +36,14 @@ class CoinbaseAccountMockTests(unittest.TestCase):
         # Sell some bitcoin
         transaction_id = self.account.sell_btc('3.5').transaction_id
         this(self.account.get_transaction(transaction_id).status) \
-            .should.equal('pending')
+            .should.equal(CoinbaseTransaction.Status.pending)
         this(len(self.account.transactions())).should.equal(1)
         this(self.account.balance).should.equal(Decimal('10'))
 
         # Complete the transaction
         self.account.mock.complete_transaction(transaction_id)
         this(self.account.get_transaction(transaction_id).status) \
-            .should.equal('complete')
+            .should.equal(CoinbaseTransaction.Status.complete)
         this(len(self.account.transactions())).should.equal(1)
         this(self.account.balance).should.equal(Decimal('6.5'))
 
@@ -74,8 +74,9 @@ class CoinbaseAccountMockTests(unittest.TestCase):
 
         # Verify the resulting state
         this(self.account.balance).should.equal(Decimal('.03'))
-        this(order.status).should.equal('complete')
-        this(transaction.status).should.equal('complete')
+        this(order.status).should.equal(CoinbaseOrder.Status.complete)
+        this(transaction.status).should.equal(
+            CoinbaseTransaction.Status.complete)
 
         # Verify the resulting callback
         this(len(callbacks)).should.equal(1)
@@ -93,13 +94,15 @@ class CoinbaseAccountMockTests(unittest.TestCase):
             amount=CoinbaseAmount('5', 'USD'),
             notes='Your refund',
         )
-        this(transaction.status).should.equal('pending')
+        this(transaction.status).should.equal(
+            CoinbaseTransaction.Status.pending)
         this(len(self.account.transactions()),).should.equal(1)
         this(self.account.balance).should.equal(Decimal('.02'))
 
         # Complete the transaction
         transaction = self.account.mock.complete_transaction(transaction.id)
-        this(transaction.status).should.equal('complete')
+        this(transaction.status).should.equal(
+            CoinbaseTransaction.Status.complete)
         this(len(self.account.transactions())).should.equal(1)
         this(self.account.balance).should.equal(Decimal('.01'))
 

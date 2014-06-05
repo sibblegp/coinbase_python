@@ -1,7 +1,7 @@
 from sure import this
 from unittest import TestCase
 
-from coinbase import CoinbaseAmount
+from coinbase import CoinbaseAmount, CoinbaseTransaction
 from . import account_setup
 from .http_mocking import *
 
@@ -16,7 +16,8 @@ class TransactionTest(TestCase):
     def test_getting_transaction_with_oauth(self):
         account = account_setup.with_oauth()
         transaction = account.get_transaction('5158b227802669269c000009')
-        this(transaction.status).should.equal('pending')
+        this(transaction.status).should.equal(
+            CoinbaseTransaction.Status.pending)
         this(transaction.amount).should.equal(CoinbaseAmount('-0.1', 'BTC'))
 
 

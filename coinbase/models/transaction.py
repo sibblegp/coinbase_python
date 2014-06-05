@@ -1,4 +1,5 @@
 import dateutil.parser
+from enum import Enum
 
 from .util import namedtuple
 
@@ -12,11 +13,21 @@ class CoinbaseTransaction(namedtuple(
              'sender recipient recipient_address recipient_type'
 )):
     """
+    status = CoinbaseTransaction.Status
     request - bool
     sender - CoinbaseContact
     recipient - CoinbaseContact
     recipient_type - 'coinbase' or 'bitcoin'
     """
+
+    class Status(Enum):
+        """
+        Enumeration of values for `CoinbaseTransaction.status`.
+        """
+
+        pending = 'pending'
+
+        complete = 'complete'
 
     @classmethod
     def from_coinbase_dict(cls, x):
@@ -26,7 +37,7 @@ class CoinbaseTransaction(namedtuple(
             created_at=dateutil.parser.parse(x['created_at']),
             notes=x['notes'],
             amount=CoinbaseAmount.from_coinbase_dict(x['amount']),
-            status=x['status'],
+            status=CoinbaseTransaction.Status(x['status']),
             request=x['request'],
         )
 

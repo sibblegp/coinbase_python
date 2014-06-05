@@ -1,4 +1,5 @@
 import dateutil.parser
+from enum import Enum
 import json
 
 from .util import namedtuple, optional
@@ -11,27 +12,19 @@ class CoinbaseOrder(namedtuple(
              'transaction custom total mispaid customer refund_address'
 )):
     """
+    Orders are be created through the API, or by a user clicking a
+    payment button. In the latter case, the order is only behind
+    the scenes; it is hidden from the API until a payment is made.
+
     status
-            These rules are inferred from experimentation.
-            - An order's status is one of:
-              "new", "complete", "mispaid", "expired"
-            - Orders are be created through the API, or by a user clicking a
-              payment button. In the latter case, the order is only behind
-              the scenes; it is hidden from the API until a payment is made.
-            - All orders have an initial status of "new".
-            - When a "new" order receives a payment in the correct amount,
-              its status permanently becomes "complete".
-            - When a "new" order receives a payment in an incorrect amount,
-              its status permanently becomes "mispaid".
-            - When a "new" order's time runs out, its status permanently
-              becomes "expired".
+            CoinbaseOrder.Status
     total
             CoinbaseAmount.BtcAndNative. This is the order's price; in other
             words, the amount that Coinbase expects to receive for the order's
-            status to become "complete".
+            status to become `complete`.
     mispaid
             CoinbaseAmount.BtcAndNative. This field is present if the order's
-            status is "mispaid" or "expired". Its value is the amount of the
+            status is `mispaid` or `expired`. Its value is the amount of the
             most recent payment made on this order.
     refund_address
             A refund address on off-blockchain order payments.
@@ -43,6 +36,34 @@ class CoinbaseOrder(namedtuple(
     customer
             CoinbaseOrder.Customer
     """
+
+    class Status(Enum):
+        """
+        Enumeration of values for `CoinbaseOrder.status`.
+        """
+
+        """
+        All orders have an initial status of `pending`.
+        """
+        pending = 'new'
+
+        """
+        When a `pending` order receives a payment in the correct amount,
+        its status permanently becomes `complete`.
+        """
+        complete = 'completed'
+
+        """
+        When a `pending` order receives a payment in an incorrect amount,
+        its status permanently becomes `mispaid`.
+        """
+        mispaid = 'mispaid'
+
+        """
+        When a `pending` order's time runs out, its status permanently
+        becomes `expired`.
+        """
+        expired = 'expired'
 
     @classmethod
     def parse_callback(cls, s):
@@ -58,7 +79,7 @@ class CoinbaseOrder(namedtuple(
             id=x['order']['id'],
             created_at=dateutil.parser.parse(
                 x['order']['created_at']),
-            status=x['order']['status'],
+            status=CoinbaseOrder.Status(x['order']['status']),
             receive_address=x['order']['receive_address'],
             button=CoinbaseOrder.Button.from_coinbase_dict(
                 x['order']['button']),
@@ -79,7 +100,7 @@ class CoinbaseOrder(namedtuple(
             'order': {
                 'id': self.id,
                 'created_at': self.created_at.strftime('%Y-%m-%dT%H:%M:%S%z'),
-                'status': self.status,
+                'status': self.status.value,
                 'total_btc': self.total.btc.to_coinbase_dict(),
                 'total_native': self.total.native.to_coinbase_dict(),
                 'custom': self.custom,

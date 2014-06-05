@@ -1,6 +1,5 @@
-__author__ = 'pmb6tz'
-
 import dateutil.parser
+from enum import Enum
 
 from util import namedtuple
 
@@ -13,6 +12,22 @@ class CoinbaseTransfer(namedtuple(
              'payout_date transaction_id status btc_amount '
              'subtotal_amount total_amount description'
 )):
+    """
+    status - CoinbaseTransfer.Status
+    """
+
+    class Status(Enum):
+        """
+        Enumeration of values for `CoinbaseTransfer.status`.
+        """
+
+        pending = 'Pending'
+
+        complete = 'Complete'
+
+        canceled = 'Canceled'
+
+        reversed = 'Reversed'
 
     @classmethod
     def from_coinbase_dict(cls, transfer):
@@ -28,7 +43,7 @@ class CoinbaseTransfer(namedtuple(
             payout_date=dateutil.parser.parse(
                 transfer['payout_date']),
             transaction_id=transfer.get('transaction_id', ''),
-            status=transfer['status'],
+            status=CoinbaseTransfer.Status(transfer['status']),
             btc_amount=CoinbaseAmount.from_coinbase_dict(
                 transfer['btc']),
             subtotal_amount=CoinbaseAmount.from_coinbase_dict(

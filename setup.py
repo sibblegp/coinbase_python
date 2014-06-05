@@ -26,6 +26,7 @@ setup(
         'requests>=1.1.0',
         'oauth2client>=1.1',
         'python-dateutil<2.0',
+        'enum34==1.0',
     ],
     tests_require=[
         'sure>=1.2.5',
