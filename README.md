@@ -87,6 +87,7 @@ Contributions are greatly appreciated.  Please make all requests using built in 
 ## Credits
 
 - George Sibble &lt;gsibble@gmail.com&gt;
+- Chris Martin &lt;ch.martin@gmail.com&gt;
 
 ## License
 
