@@ -236,8 +236,6 @@ class MockControl(namedtuple('CoinbaseAccount_MockControl', 'account')):
             )
 
             if order.status == 'new':
-                print(amount.btc)
-                print(order.total.btc)
                 amount_is_correct = amount.btc == order.total.btc
                 status = 'complete' if amount_is_correct else 'mispaid'
                 order = self.modify_order(order.id, status=status)
