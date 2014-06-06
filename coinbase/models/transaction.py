@@ -9,7 +9,7 @@ from contact import CoinbaseContact
 
 class CoinbaseTransaction(namedtuple(
     'CoinbaseTransaction',
-    optional='id created_at notes amount status request '
+    optional='id created_at notes amount status request hash '
              'sender recipient recipient_address recipient_type'
 )):
     """
@@ -39,6 +39,7 @@ class CoinbaseTransaction(namedtuple(
             amount=CoinbaseAmount.from_coinbase_dict(x['amount']),
             status=CoinbaseTransaction.Status(x['status']),
             request=x['request'],
+            hash=x.get('hsh'),
         )
 
         if 'sender' in x:
