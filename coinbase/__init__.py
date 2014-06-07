@@ -33,7 +33,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 __author__ = 'gsibble'
 
-from oauth2client.client import AccessTokenRefreshError, OAuth2Credentials, AccessTokenCredentialsError
+from oauth2client.client import AccessTokenRefreshError, OAuth2Credentials, \
+    AccessTokenCredentialsError
 
 import requests
 import httplib2
@@ -59,8 +60,8 @@ class CoinbaseAccount(object):
                  oauth2_credentials=None,
                  api_key=None):
         """
-
-        :param oauth2_credentials: JSON representation of Coinbase oauth2 credentials
+        :param oauth2_credentials: JSON representation of Coinbase oauth2
+                credentials
         :param api_key:  Coinbase API key
         """
 
@@ -81,7 +82,8 @@ class CoinbaseAccount(object):
             self.http = httplib2.Http(ca_certs=ca_path)
 
             #Create our credentials from the JSON sent
-            self.oauth2_credentials = OAuth2Credentials.from_json(oauth2_credentials)
+            self.oauth2_credentials = \
+                OAuth2Credentials.from_json(oauth2_credentials)
 
             #Check our token
             self.token_expired = False
@@ -115,7 +117,7 @@ class CoinbaseAccount(object):
         """
 
         #Check if they are expired
-        if self.oauth2_credentials.access_token_expired == True:
+        if self.oauth2_credentials.access_token_expired:
 
             #Print an notification message if they are
             print 'oAuth2 Token Expired'
@@ -127,7 +129,8 @@ class CoinbaseAccount(object):
         """
         Refresh our oauth2 token
         :return: JSON representation of oauth token
-        :raise: AccessTokenRefreshError if there was an error refreshing the token
+        :raise: AccessTokenRefreshError if there was an error refreshing the
+                token
         """
 
         #See if we can refresh the token
@@ -136,7 +139,6 @@ class CoinbaseAccount(object):
             self.oauth2_credentials.refresh(http=self.http)
 
             #We were successful
-            #print 'Your token was refreshed with the following response...'
 
             #Return the token for storage
             return self.oauth2_credentials
@@ -223,28 +225,24 @@ class CoinbaseAccount(object):
         results = response.json()
         return CoinbaseAmount(results['amount'], results['currency'])
 
-    # @property
-    # def user(self):
-    #     url = COINBASE_ENDPOINT + '/account/receive_address'
-    #     response = self.session.get(url)
-    #     return response.json()
-
-
     def buy_btc(self, qty, pricevaries=False):
         """
         Buy BitCoin from Coinbase for USD
         :param qty: BitCoin quantity to be bought
-        :param pricevaries: Boolean value that indicates whether or not the transaction should
-                be processed if Coinbase cannot gaurentee the current price. 
-        :return: CoinbaseTransfer with all transfer details on success or 
-                 CoinbaseError with the error list received from Coinbase on failure
+        :param pricevaries: Boolean value that indicates whether or not the
+                transaction should be processed if Coinbase cannot guarantee
+                the current price.
+        :return: CoinbaseTransfer with all transfer details on success or
+                CoinbaseError with the error list received from Coinbase on
+                failure
         """
         url = COINBASE_ENDPOINT + '/buys'
         request_data = {
             "qty": qty,
             "agree_btc_amount_varies": pricevaries
         }
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        response = self.session.post(url=url, data=json.dumps(request_data),
+                                     params=self.global_request_params)
         response_parsed = response.json()
         if response_parsed['success'] == False:
             return CoinbaseError(response_parsed['errors'])
@@ -257,13 +255,15 @@ class CoinbaseAccount(object):
         Sell BitCoin to Coinbase for USD
         :param qty: BitCoin quantity to be sold
         :return: CoinbaseTransfer with all transfer details on success or 
-                 CoinbaseError with the error list received from Coinbase on failure
+                 CoinbaseError with the error list received from Coinbase
+                 on failure
         """
         url = COINBASE_ENDPOINT + '/sells'
         request_data = {
             "qty": qty,
         }
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        response = self.session.post(url=url, data=json.dumps(request_data),
+                                     params=self.global_request_params)
         response_parsed = response.json()
         if response_parsed['success'] == False:
             return CoinbaseError(response_parsed['errors'])
@@ -310,7 +310,8 @@ class CoinbaseAccount(object):
 
     def send(self, to_address, amount, notes='', currency='BTC'):
         """
-        Send BitCoin from this account to either an email address or a BTC address
+        Send BitCoin from this account to either an email address or a BTC
+        address
         :param to_address: Email or BTC address to where coin should be sent
         :param amount: Amount of currency to send
         :param notes: Notes to be included with transaction
@@ -338,7 +339,8 @@ class CoinbaseAccount(object):
                 }
             }
 
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        response = self.session.post(url=url, data=json.dumps(request_data),
+                                     params=self.global_request_params)
         response_parsed = response.json()
 
         if response_parsed['success'] == False:
@@ -413,7 +415,7 @@ class CoinbaseAccount(object):
         response = self.session.get(url, params=self.global_request_params)
         results = response.json()
 
-        if results.get('success', True) == False:
+        if not results.get('success', True):
             pass
             #TODO:  Add error handling
 
@@ -461,7 +463,8 @@ class CoinbaseAccount(object):
                 "callback_url": callback_url
             }
         }
-        response = self.session.post(url=url, data=json.dumps(request_data), params=self.global_request_params)
+        response = self.session.post(url=url, data=json.dumps(request_data),
+                                     params=self.global_request_params)
         return response.json()['address']
 
 
