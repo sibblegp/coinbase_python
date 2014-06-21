@@ -24,6 +24,17 @@ class SendToBitcoinTest(TestCase):
         this(tx.recipient_address).should.equal(
             '7nregFERfhn8f34FERf8yn8fEGgfe274nv')
 
+    def test_send_usd_to_btc_address_with_key(self):
+        account = account_setup.with_key()
+        tx = account.send(to_address='7nregFERfhn8f34FERf8yn8fEGgfe274nv',
+                          amount=CoinbaseAmount('12', 'USD'))
+        this(tx.amount).should.equal(CoinbaseAmount('-0.1', 'BTC'))
+        this(tx.request).should.equal(False)
+        this(tx.sender.email).should.equal('alice@example.com')
+        this(tx.recipient).should.equal(None)
+        this(tx.recipient_address).should.equal(
+            '7nregFERfhn8f34FERf8yn8fEGgfe274nv')
+
 
 response_body = """
 {

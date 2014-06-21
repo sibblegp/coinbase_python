@@ -372,7 +372,6 @@ class CoinbaseAccount(object):
         request_data = {
             'transaction': {
                 'to': to_address,
-                'amount': amount,
                 'notes': notes,
             },
         }
