@@ -32,7 +32,7 @@ class CoinbaseAccountMock(object):
         self.authenticated = True
         self.allow_transfers = True
 
-        self.balance = Decimal('0')
+        self.balance = CoinbaseAmount('0', 'BTC')
         self.receive_address = random_bitcoin_address()
         self.exchange_rates = {
             'usd_to_btc': Decimal('0.002'),
@@ -176,7 +176,9 @@ class MockControl(namedtuple('CoinbaseAccount_MockControl', 'account')):
                 transaction.sender.id == self.account._me.id)
 
         amount_btc = self.convert_amount(transaction.amount, 'BTC').amount
-        self.account.balance += amount_btc * (-1 if send else 1)
+        account_amount = self.account.balance.amount
+        self.account.balance = self.account.balance._replace(
+                amount=account_amount + amount_btc * (-1 if send else 1))
 
         return transaction
 
@@ -209,7 +211,8 @@ class MockControl(namedtuple('CoinbaseAccount_MockControl', 'account')):
             native=CoinbaseAmount(amount_usd, 'USD'),
         )
 
-        self.account.balance += amount_btc
+        self.account.balance = self.account.balance._replace(
+                amount=self.account.balance.amount + amount_btc)
 
         transaction = CoinbaseTransaction(
             id=random_transaction_id(),
