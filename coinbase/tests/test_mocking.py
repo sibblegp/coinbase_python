@@ -20,36 +20,36 @@ class CoinbaseAccountMockTests(unittest.TestCase):
         this(self.account.get_transaction(transaction_id).status) \
             .should.equal(CoinbaseTransaction.Status.pending)
         this(len(self.account.transactions()),).should.equal(1)
-        this(self.account.balance).should.equal(Decimal('0'))
+        this(self.account.balance).should.equal(CoinbaseAmount('0', 'BTC'))
 
         # Complete the transaction
         self.account.mock.complete_transaction(transaction_id)
         this(self.account.get_transaction(transaction_id).status) \
             .should.equal(CoinbaseTransaction.Status.complete)
         this(len(self.account.transactions())).should.equal(1)
-        this(self.account.balance).should.equal(Decimal('3.5'))
+        this(self.account.balance).should.equal(CoinbaseAmount('3.5', 'BTC'))
 
     def test_sell(self):
 
-        self.account.balance = Decimal('10')
+        self.account.balance = CoinbaseAmount('10', 'BTC')
 
         # Sell some bitcoin
         transaction_id = self.account.sell_btc('3.5').transaction_id
         this(self.account.get_transaction(transaction_id).status) \
             .should.equal(CoinbaseTransaction.Status.pending)
         this(len(self.account.transactions())).should.equal(1)
-        this(self.account.balance).should.equal(Decimal('10'))
+        this(self.account.balance).should.equal(CoinbaseAmount('10', 'BTC'))
 
         # Complete the transaction
         self.account.mock.complete_transaction(transaction_id)
         this(self.account.get_transaction(transaction_id).status) \
             .should.equal(CoinbaseTransaction.Status.complete)
         this(len(self.account.transactions())).should.equal(1)
-        this(self.account.balance).should.equal(Decimal('6.5'))
+        this(self.account.balance).should.equal(CoinbaseAmount('6.5', 'BTC'))
 
     def test_payment_via_button(self):
 
-        self.account.balance = Decimal('.02')
+        self.account.balance = CoinbaseAmount('.02', 'BTC')
 
         # Set up a button
         button_id = self.account.create_button(CoinbasePaymentButton(
@@ -73,7 +73,7 @@ class CoinbaseAccountMockTests(unittest.TestCase):
         transaction = self.account.get_transaction(order.transaction.id)
 
         # Verify the resulting state
-        this(self.account.balance).should.equal(Decimal('.03'))
+        this(self.account.balance).should.equal(CoinbaseAmount('.03', 'BTC'))
         this(order.status).should.equal(CoinbaseOrder.Status.complete)
         this(transaction.status).should.equal(
             CoinbaseTransaction.Status.complete)
@@ -86,7 +86,7 @@ class CoinbaseAccountMockTests(unittest.TestCase):
 
     def test_send(self):
 
-        self.account.balance = Decimal('.02')
+        self.account.balance = CoinbaseAmount('.02', 'BTC')
 
         # Send someone money
         transaction = self.account.send(
@@ -97,14 +97,14 @@ class CoinbaseAccountMockTests(unittest.TestCase):
         this(transaction.status).should.equal(
             CoinbaseTransaction.Status.pending)
         this(len(self.account.transactions()),).should.equal(1)
-        this(self.account.balance).should.equal(Decimal('.02'))
+        this(self.account.balance).should.equal(CoinbaseAmount('.02', 'BTC'))
 
         # Complete the transaction
         transaction = self.account.mock.complete_transaction(transaction.id)
         this(transaction.status).should.equal(
             CoinbaseTransaction.Status.complete)
         this(len(self.account.transactions())).should.equal(1)
-        this(self.account.balance).should.equal(Decimal('.01'))
+        this(self.account.balance).should.equal(CoinbaseAmount('.01', 'BTC'))
 
     def test_get_exchange_rate(self):
         this(self.account.get_exchange_rate('BTC', 'USD')) \

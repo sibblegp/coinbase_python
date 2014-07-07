@@ -47,6 +47,7 @@ from decimal import Decimal
 from coinbase.config import COINBASE_ENDPOINT
 from coinbase.models import *
 from coinbase.errors import *
+from coinbase.mock import CoinbaseAccountMock
 
 
 url_path_component_regex = re.compile('^[0-9a-z_\-]+$', re.I)
