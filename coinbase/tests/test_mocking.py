@@ -112,6 +112,14 @@ class CoinbaseAccountMockTests(unittest.TestCase):
         this(self.account.get_exchange_rate('USD', 'BTC')) \
             .should.equal(Decimal('.002'))
 
+    def test_transactions(self):
+        self.account.send(amount=CoinbaseAmount('.5', 'BTC'),
+                          to_address='alice@example.com')
+        self.account.send(amount=CoinbaseAmount('.8', 'BTC'),
+                          to_address='bob@example.com')
+        this([tx.recipient_address for tx in self.account.transactions()]) \
+            .should.equal(['bob@example.com', 'alice@example.com'])
+
 
 class CoinbaseAccountMockSpecTests(unittest.TestCase):
 

@@ -23,9 +23,12 @@ class CoinbaseAccountMock(object):
                                    name='Me', email='me@example.com')
 
         self._transactions = {}  # transaction id -> CoinbaseTransaction
+        self._transaction_ids = []  # transaction ids in creation order
         self._transfers = {}  # transaction id -> CoinbaseTransfer
+        self._transfer_ids = []  # transaction ids in creation order
         self._buttons = {}  # button id -> CoinbasePaymentButton
         self._orders = {}  # order id -> CoinbaseOrder
+        self._order_ids = []  # order ids in creation order
         self._orders_by_address = {}  # receive address -> CoinbaseOrder.id
         self._orders_by_custom = {}  # button custom string -> CoinbaseOrder.id
 
@@ -61,6 +64,7 @@ class CoinbaseAccountMock(object):
 
     def buy_btc(self, qty, pricevaries=False):
         now = get_now()
+
         transaction = CoinbaseTransaction(
             id=random_transaction_id(),
             created_at=now,
@@ -71,8 +75,10 @@ class CoinbaseAccountMock(object):
             transaction_id=transaction.id,
             created_at=now,
         )
-        self._transactions[transaction.id] = transaction
-        self._transfers[transaction.id] = transfer
+
+        self.mock.add_transaction(transaction)
+        self.mock.add_transfer(transfer)
+
         return transfer
 
     def sell_btc(self, qty):
@@ -94,18 +100,16 @@ class CoinbaseAccountMock(object):
             recipient_address=to_address,
             recipient_type='coinbase' if '@' in to_address else 'bitcoin',
         )
-        self._transactions[transaction.id] = transaction
+        self.mock.add_transaction(transaction)
         return transaction
 
     def transactions(self, count=30):
-        return sorted(
-            self._transactions.values(),
-            key=lambda t: t.created_at,
-            reverse=True
-        )[:count]
+        return [self._transactions[i] for i in
+                list(reversed(self._transaction_ids))[:count]]
 
     def transfers(self, count=30):
-        raise NotImplementedError  # todo
+        raise [self._transfers[i] for i in
+               list(reversed(self._transfer_ids))[:count]]
 
     def get_transaction(self, transaction_id):
         return self._transactions[transaction_id]
@@ -129,7 +133,9 @@ class CoinbaseAccountMock(object):
         return button
 
     def orders(self, account_id=None, page=None):
-        raise NotImplementedError  # todo
+        # todo - paging
+        return [self._orders[i] for i in
+                list(reversed(self._order_ids))]
 
     def get_order(self, id_or_custom_field, account_id=None):
         order = self._orders.get(id_or_custom_field)
@@ -154,10 +160,7 @@ class CoinbaseAccountMock(object):
             custom=button.custom,
             total=self.mock.btc_and_native(button.price),
         )
-        self._orders[order.id] = order
-        self._orders_by_address[order.receive_address] = order.id
-        if order.custom:
-            self._orders_by_custom[order.custom] = order.id
+        self.mock.add_order(order)
         return order
 
 
@@ -221,7 +224,7 @@ class MockControl(namedtuple('CoinbaseAccount_MockControl', 'account')):
             status=CoinbaseTransaction.Status.complete,
         )
 
-        self.account._transactions[transaction.id] = transaction
+        self.account.mock.add_transaction(transaction)
 
         order_id = self.account._orders_by_address.get(receive_address)
         if order_id is not None:
@@ -256,6 +259,21 @@ class MockControl(namedtuple('CoinbaseAccount_MockControl', 'account')):
                 ))
 
         return callbacks
+
+    def add_transaction(self, transaction):
+        self.account._transactions[transaction.id] = transaction
+        self.account._transaction_ids.append(transaction.id)
+
+    def add_transfer(self, transfer):
+        self.account._transfers[transfer.transaction_id] = transfer
+        self.account._transfer_ids.append(transfer.transaction_id)
+
+    def add_order(self, order):
+        self.account._orders[order.id] = order
+        self.account._orders_by_address[order.receive_address] = order.id
+        if order.custom:
+            self.account._orders_by_custom[order.custom] = order.id
+        self.account._order_ids.append(order.id)
 
     def modify_transaction(self, transaction_id, **kwargs):
         transaction = self.account._transactions[transaction_id]
