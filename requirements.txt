@@ -2,6 +2,7 @@ httplib2==0.9
 httpretty==0.8.0
 mock==1.0.1
 oauth2client==1.2
+python-dateutil<2.0
 requests==2.3.0
 six==1.6.1
 sure==1.2.7
