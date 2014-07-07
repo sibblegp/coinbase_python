@@ -1,3 +1,4 @@
+enum34==1.0
 httplib2==0.9
 httpretty==0.8.0
 mock==1.0.1
