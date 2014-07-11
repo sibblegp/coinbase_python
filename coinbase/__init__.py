@@ -354,13 +354,16 @@ class CoinbaseAccount(object):
         return CoinbaseTransaction \
             .from_coinbase_dict(response_parsed['transaction'])
 
-    def send(self, to_address, amount, notes=''):
+    def send(self, to_address, amount, notes='', user_fee=None):
         """
         Send BitCoin from this account to either an email address or a BTC
         address
         :param to_address: Email or BTC address to where coin should be sent
         :param amount: Amount of currency to send (CoinbaseAmount)
         :param notes: Notes to be included with transaction
+        :param user_fee: an optionally included miner's fee. Coinbase pays
+        feeds on all transfers over 0.01 BTC, but under that you should include
+        a fee.
         :return: CoinbaseTransaction with status and details
         :raise: CoinbaseError with the error list received from Coinbase on
                  failure
@@ -382,6 +385,9 @@ class CoinbaseAccount(object):
         else:
             request_data['transaction']['amount_string'] = str(amount.amount)
             request_data['transaction']['amount_currency_iso'] = amount.currency
+
+        if not user_fee is None:
+            request_data['transaction']['user_fee'] = str(user_fee)
 
         response = self.session.post(url=url, data=json.dumps(request_data),
                                      params=self.auth_params)

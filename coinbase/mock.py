@@ -87,7 +87,7 @@ class CoinbaseAccountMock(object):
     def request(self, from_email, amount, notes=''):
         raise NotImplementedError  # todo
 
-    def send(self, to_address, amount, notes=''):
+    def send(self, to_address, amount, notes='', user_fee=None):
         transaction = CoinbaseTransaction(
             id=random_transaction_id(),
             created_at=get_now(),
