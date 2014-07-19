@@ -40,6 +40,7 @@ class CoinbaseTransaction(namedtuple(
             status=CoinbaseTransaction.Status(x['status']),
             request=x['request'],
             hash=x.get('hsh'),
+            recipient_type=('coinbase' if ('recipient' in x) else 'bitcoin'),
         )
 
         if 'sender' in x:
@@ -48,12 +49,11 @@ class CoinbaseTransaction(namedtuple(
 
         if 'recipient' in x:
             t = t._replace(
-                recipient_type='coinbase',
                 recipient=CoinbaseContact.from_coinbase_dict(x['recipient']),
             )
-        elif 'recipient_address' in x:
+
+        if 'recipient_address' in x:
             t = t._replace(
-                recipient_type='bitcoin',
                 recipient_address=x['recipient_address'],
             )
 

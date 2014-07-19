@@ -18,7 +18,7 @@ class TransactionListTest(TestCase):
 
     def test_transaction_list_with_oauth(self):
         account = account_setup.with_oauth()
-        this(account.transactions()).should.be.an(list)
+        this(account.transactions()).should.equal(expected_transactions)
 
 
 response_body = """
@@ -153,6 +153,7 @@ expected_transactions = [
             email='gsibble@gmail.com',
             name='gsibble@gmail.com',
         ),
+        recipient_type='coinbase',
         request=True,
         sender=CoinbaseContact(
             id='514e4c1c802e1bef9800001e',
