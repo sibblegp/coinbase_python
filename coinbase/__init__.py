@@ -386,7 +386,7 @@ class CoinbaseAccount(object):
             request_data['transaction']['amount_string'] = str(amount.amount)
             request_data['transaction']['amount_currency_iso'] = amount.currency
 
-        if not user_fee is None:
+        if user_fee is not None:
             request_data['transaction']['user_fee'] = str(user_fee)
 
         response = self.session.post(url=url, data=json.dumps(request_data),
