@@ -1,3 +1,7 @@
+machine:
+  python:
+    version: 2.7.5
+
 test:
   override:
     - nosetests coinbase
