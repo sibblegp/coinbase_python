@@ -46,6 +46,7 @@ response_body = """
                 "hsh": null,
                 "id": "514e4c37802e1bf69100000e",
                 "notes": "Testing",
+                "idem": "",
                 "recipient": {
                     "email": "gsibble@gmail.com",
                     "id": "509e01ca12838e0200000212",
@@ -70,6 +71,7 @@ response_body = """
                 "hsh": null,
                 "id": "514e4c1c802e1bef98000020",
                 "notes": "Testing",
+                "idem": "",
                 "recipient": {
                     "email": "gsibble@gmail.com",
                     "id": "509e01ca12838e0200000212",
@@ -95,6 +97,7 @@ response_body = """
 "42dd65a18dbea0779f32021663e60b1fab8ee0f859db7172a078d4528e01c6c8",
                 "id": "514b9fb1b8377ee36500000d",
                 "notes": "You gave me this a while ago.",
+                "idem": "jkl",
                 "recipient": {
                     "email": "brian@coinbase.com",
                     "id": "4efec8d7bedd320001000003",
@@ -121,6 +124,7 @@ response_body = """
 "ac9b0ffbe36dbe12c5ca047a5bdf9cadca3c9b89b74751dff83b3ac863ccc0b3",
                 "id": "509e01cb12838e0200000224",
                 "notes": "",
+                "idem": "xyz",
                 "recipient": {
                     "email": "gsibble@gmail.com",
                     "id": "509e01ca12838e0200000212",
@@ -189,6 +193,7 @@ expected_transactions = [
         hash='42dd65a18dbea0779f32021663e60b1fab8ee0f859db7172a078d4528e01c6c8',
         id='514b9fb1b8377ee36500000d',
         notes='You gave me this a while ago.',
+        idem='jkl',
         recipient=CoinbaseContact(
             id='4efec8d7bedd320001000003',
             email='brian@coinbase.com',
@@ -211,6 +216,7 @@ expected_transactions = [
         hash='ac9b0ffbe36dbe12c5ca047a5bdf9cadca3c9b89b74751dff83b3ac863ccc0b3',
         id='509e01cb12838e0200000224',
         notes='',
+        idem='xyz',
         recipient=CoinbaseContact(
             id='509e01ca12838e0200000212',
             email='gsibble@gmail.com',

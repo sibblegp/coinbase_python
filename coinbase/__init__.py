@@ -354,7 +354,7 @@ class CoinbaseAccount(object):
         return CoinbaseTransaction \
             .from_coinbase_dict(response_parsed['transaction'])
 
-    def send(self, to_address, amount, notes='', user_fee=None):
+    def send(self, to_address, amount, notes='', user_fee=None, idem=None):
         """
         Send BitCoin from this account to either an email address or a BTC
         address
@@ -364,6 +364,10 @@ class CoinbaseAccount(object):
         :param user_fee: an optionally included miner's fee. Coinbase pays
         feeds on all transfers over 0.01 BTC, but under that you should include
         a fee.
+        :param idem: An optional token to ensure idempotence. If a previous
+        transaction with the same idem parameter already exists for this
+        sender, that previous transaction will be returned and a new one will
+        not be created. Max length 100 characters.
         :return: CoinbaseTransaction with status and details
         :raise: CoinbaseError with the error list received from Coinbase on
                  failure
@@ -388,6 +392,9 @@ class CoinbaseAccount(object):
 
         if user_fee is not None:
             request_data['transaction']['user_fee'] = str(user_fee)
+
+        if idem is not None:
+            request_data['transaction']['idem'] = str(idem)
 
         response = self.session.post(url=url, data=json.dumps(request_data),
                                      params=self.auth_params)

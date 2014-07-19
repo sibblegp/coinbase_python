@@ -18,8 +18,10 @@ class SendUsdToEmailTest(TestCase):
 
     def test_send_btc_to_email_address_with_key(self):
         account = account_setup.with_key()
-        tx = account.send(to_address='bob@example.com',
-                          amount=CoinbaseAmount('12', 'USD'))
+        tx = account.send(
+            to_address='bob@example.com',
+            amount=CoinbaseAmount('12', 'USD'),
+        )
         this(last_request_json()).should.equal(expected_request_json)
         this(last_request_params()).should.equal({
             'api_key': [account_setup.api_key],
@@ -28,8 +30,10 @@ class SendUsdToEmailTest(TestCase):
 
     def test_send_btc_to_email_address_with_oauth(self):
         account = account_setup.with_oauth()
-        tx = account.send(to_address='bob@example.com',
-                          amount=CoinbaseAmount('12', 'USD'))
+        tx = account.send(
+            to_address='bob@example.com',
+            amount=CoinbaseAmount('12', 'USD'),
+        )
         this(last_request_json()).should.equal(expected_request_json)
         this(last_request_params()).should.equal({})
         this(tx).should.equal(expected_transaction)
@@ -57,6 +61,7 @@ response_body = """
         "hsh": null,
         "id": "69ab532bde59cfba595c5738",
         "notes": "",
+        "idem": "",
         "recipient": {
             "email": "bob@example.com",
             "id": "72370bd60efa506c6596d56e",

@@ -34,6 +34,7 @@ response_body = """
 "223a404485c39173ab41f343439e59b53a5d6cba94a02501fc6c67eeca0d9d9e",
         "id": "5158b227802669269c000009",
         "notes": "",
+        "idem": "abcdef",
         "recipient_address": "15yHmnB5vY68sXpAU9pR71rnyPAGLLWeRP",
         "request": false,
         "sender": {
@@ -52,6 +53,7 @@ expected_transaction = CoinbaseTransaction(
     status=CoinbaseTransaction.Status.pending,
     amount=CoinbaseAmount('-0.1', 'BTC'),
     hash='223a404485c39173ab41f343439e59b53a5d6cba94a02501fc6c67eeca0d9d9e',
+    idem='abcdef',
     created_at=datetime(2013, 3, 31, 15, 1, 11,
                         tzinfo=tzoffset(None, -25200)),
     notes='',

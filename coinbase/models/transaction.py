@@ -9,12 +9,13 @@ from contact import CoinbaseContact
 
 class CoinbaseTransaction(namedtuple(
     'CoinbaseTransaction',
-    optional='id created_at notes amount status request hash '
+    optional='id created_at notes amount status request hash idem '
              'sender recipient recipient_address recipient_type'
 )):
     """
     status = CoinbaseTransaction.Status
     request - bool
+    idem  - str
     sender - CoinbaseContact
     recipient - CoinbaseContact
     recipient_type - 'coinbase' or 'bitcoin'
@@ -41,6 +42,7 @@ class CoinbaseTransaction(namedtuple(
             request=x['request'],
             hash=x.get('hsh'),
             recipient_type=('coinbase' if ('recipient' in x) else 'bitcoin'),
+            idem=(x.get('idem') or None),
         )
 
         if 'sender' in x:
