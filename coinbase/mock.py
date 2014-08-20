@@ -48,7 +48,7 @@ class CoinbaseAccountMock(object):
         pass
 
     def get_exchange_rate(self, from_currency, to_currency):
-        return self.exchange_rates['%s_to_%s' % (
+        return self.exchange_rates['{}_to_{}'.format(
             from_currency.lower(),
             to_currency.lower()
         )]

@@ -120,6 +120,6 @@ class CoinbasePaymentButton(namedtuple(
         if self.suggested_prices is not None:
             x['choose_price'] = True
             for i, price in zip(range(1, 6), self.suggested_prices):
-                x['price%d' % i] = str(price)
+                x['price{}'.format(i)] = str(price)
 
         return x

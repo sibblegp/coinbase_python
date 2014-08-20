@@ -571,8 +571,9 @@ class CoinbaseAccount(object):
     def get_exchange_rate(self, from_currency, to_currency):
         url = coinbase_url('currencies', 'exchange_rates')
         rates = json.loads(requests.get(url).content)
-        return Decimal(rates['%s_to_%s' % (from_currency.lower(),
-                                           to_currency.lower())])
+        return Decimal(rates['{}_to_{}'.format(
+            from_currency.lower(), to_currency.lower()
+        )])
 
     def orders(self, account_id=None, page=None):
         """
