@@ -8,56 +8,56 @@ TEMP_CREDENTIALS = '''{"_module": "oauth2client.client", "token_expiry": "2013-0
 
 
 def do_coinbase_stuff(account):
-    print 'The current value of 1 BTC in USD is: $' + str(account.sell_price())
-    print 'The current value of 10 BTC in USD is: $' + str(account.sell_price(qty=10))
-    print 'You can buy 1 bitcoin for ' + str(account.buy_price()) + ' USD'
-    print 'Your balance is ' + str(account.balance) + ' BTC'
-    print 'That means your account value in USD is $' + str(account.sell_price(qty=account.balance))
+    print('The current value of 1 BTC in USD is: $' + str(account.sell_price()))
+    print('The current value of 10 BTC in USD is: $' + str(account.sell_price(qty=10)))
+    print('You can buy 1 bitcoin for ' + str(account.buy_price()) + ' USD')
+    print('Your balance is ' + str(account.balance) + ' BTC')
+    print('That means your account value in USD is $' + str(account.sell_price(qty=account.balance)))
 
-    print 'Your receive address is ' + str(account.receive_address)
-    print 'You have the following people in your address book:'
-    print [contact['email'] for contact in account.contacts]
+    print('Your receive address is ' + str(account.receive_address))
+    print('You have the following people in your address book:')
+    print([contact['email'] for contact in account.contacts])
 
-    print 'Would you like to try moving some Bitcoin around?'
+    print('Would you like to try moving some Bitcoin around?')
     response = raw_input("Type YES if so: ")
 
     if response == 'YES':
-        print "Awesome!  Let's do it.  First, let's have you make a request to someone for some BTC."
+        print("Awesome!  Let's do it.  First, let's have you make a request to someone for some BTC.")
         request_btc_from_email = raw_input("What email address would you like to request BTC from: ")
         amount_to_request = raw_input("How much BTC would you like to request: ")
-        print 'Setting up request to ' + request_btc_from_email
+        print('Setting up request to ' + request_btc_from_email)
         request_transaction = account.request(from_email=request_btc_from_email,
                                               amount=amount_to_request,
                                               notes='Test request')
-        print "We successfully created a request for " + request_transaction.sender.email + " to send you " + str(
-            request_transaction.amount) + " " + request_transaction.amount.currency
+        print("We successfully created a request for " + request_transaction.sender.email + " to send you " + str(
+            request_transaction.amount) + " " + request_transaction.amount.currency)
 
-        print "Now would you like to send some bitcoin? Plese note this will really send BTC from your account."
+        print("Now would you like to send some bitcoin? Plese note this will really send BTC from your account.")
         send_response = raw_input("Type YES if so: ")
 
         if send_response == 'YES':
-            print "Awesome!  Let's do that!"
+            print("Awesome!  Let's do that!")
             send_btc_to = raw_input("Please enter a Bitcoin address to send money to: ")
             amount_to_send = raw_input("How much BTC would you like to send: ")
             send_transaction = account.send(to_address=send_btc_to,
                                             amount=amount_to_send,
                                             notes='Test send')
 
-            print "We successfully sent " + str(
-                send_transaction.amount) + " " + send_transaction.amount.currency + " to " + send_transaction.recipient_address
+            print("We successfully sent " + str(
+                send_transaction.amount) + " " + send_transaction.amount.currency + " to " + send_transaction.recipient_address)
 
-            print "Your new balance is " + str(account.balance)
+            print("Your new balance is " + str(account.balance))
 
     transactions = account.transactions(count=30)
 
-    print "Here are your last " + str(len(transactions)) + " transactions:"
+    print("Here are your last " + str(len(transactions)) + " transactions:")
 
     for index, transaction in enumerate(transactions):
 
         if transaction.amount > 0:
-            print str(index) + ": " + str(transaction.amount) + " " + transaction.amount.currency + " to your Coinbase wallet."
+            print(str(index) + ": " + str(transaction.amount) + " " + transaction.amount.currency + " to your Coinbase wallet.")
         else:
-            print str(index) + ": " + str(transaction.amount) + " " + transaction.amount.currency + " out to a " + transaction.recipient_type + " address"
+            print(str(index) + ": " + str(transaction.amount) + " " + transaction.amount.currency + " out to a " + transaction.recipient_type + " address")
 
 
 if __name__ == '__main__':

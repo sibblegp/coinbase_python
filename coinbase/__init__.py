@@ -146,7 +146,7 @@ class CoinbaseAccount(object):
         if self.oauth2_credentials.access_token_expired:
 
             #Print an notification message if they are
-            print 'oAuth2 Token Expired'
+            print('oAuth2 Token Expired')
 
             #Raise the appropriate error
             raise AccessTokenCredentialsError
@@ -173,7 +173,7 @@ class CoinbaseAccount(object):
         except AccessTokenRefreshError:
 
             #Print a warning
-            print 'Your refresh token is invalid'
+            print('Your refresh token is invalid')
 
             #Raise the appropriate error
             raise AccessTokenRefreshError
