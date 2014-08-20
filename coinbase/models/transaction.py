@@ -3,8 +3,8 @@ from enum import Enum
 
 from .util import namedtuple
 
-from amount import CoinbaseAmount
-from contact import CoinbaseContact
+from .amount import CoinbaseAmount
+from .contact import CoinbaseContact
 
 
 class CoinbaseTransaction(namedtuple(

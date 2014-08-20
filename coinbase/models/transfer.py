@@ -1,9 +1,8 @@
 import dateutil.parser
 from enum import Enum
 
-from util import namedtuple
-
-from amount import CoinbaseAmount
+from .util import namedtuple
+from .amount import CoinbaseAmount
 
 
 class CoinbaseTransfer(namedtuple(
