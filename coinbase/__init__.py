@@ -55,7 +55,7 @@ url_path_component_regex = re.compile('^[0-9a-z_\-]+$', re.I)
 
 def coinbase_url(*args):
 
-    args = map(str, args)
+    args = list(map(str, args))
 
     # make sure we don't concatenate anything too weird into the url
     for c in args:
@@ -416,12 +416,12 @@ class CoinbaseAccount(object):
         self._require_authentication()
 
         url = coinbase_url('transactions')
-        pages = count / 30 + 1
+        pages = int((count - 1) / 30) + 1
         transactions = []
 
         reached_final_page = False
 
-        for page in xrange(1, pages + 1):
+        for page in range(1, pages + 1):
 
             if not reached_final_page:
                 params = {'page': page}
@@ -448,12 +448,12 @@ class CoinbaseAccount(object):
         self._require_authentication()
 
         url = coinbase_url('transfers')
-        pages = count / 30 + 1
+        pages = int((count - 1) / 30) + 1
         transfers = []
 
         reached_final_page = False
 
-        for page in xrange(1, pages + 1):
+        for page in range(1, pages + 1):
 
             if not reached_final_page:
                 params = {'page': page}
