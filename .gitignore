@@ -36,3 +36,4 @@ nosetests.xml
 
 /.idea/
 /coinbase_oauth2/secrets.py
+/MANIFEST
