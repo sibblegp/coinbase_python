@@ -131,5 +131,5 @@ class CoinbaseAccountMockSpecTests(unittest.TestCase):
 
 def public_argspecs(x):
     return dict([(key, inspect.getargspec(value))
-                 for key, value in x.__dict__.iteritems()
+                 for key, value in x.__dict__.items()
                  if key[0] != '_' and inspect.isfunction(value)])
