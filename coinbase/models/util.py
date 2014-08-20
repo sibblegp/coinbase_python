@@ -16,7 +16,12 @@ def namedtuple(name, args=None, optional=None):
     args = coerce_to_list(args)
     optional = coerce_to_list(optional)
     x = collections.namedtuple(name, args + optional)
-    x.__new__.func_defaults = tuple([None] * len(optional))
+    if hasattr(x.__new__, 'func_defaults'):  # python 2
+        x.__new__.func_defaults = tuple([None] * len(optional))
+    elif hasattr(x.__new__, '__defaults__'):  # python 3
+        x.__new__.__defaults__ = tuple([None] * len(optional))
+    else:
+        raise Exception('???')
     return x
 
 
