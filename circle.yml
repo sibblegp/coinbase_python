@@ -2,6 +2,8 @@ machine:
   python:
     version: 2.7.5
 dependencies:
+  pre:
+    - pyenv global 3.3.2
   override:
     - pip install tox
 test:
