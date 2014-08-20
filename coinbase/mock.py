@@ -328,7 +328,7 @@ def floor_second(x):
 
 
 def random_string(length, chars):
-    return ''.join((random.choice(chars) for _ in xrange(length)))
+    return ''.join((random.choice(chars) for _ in range(length)))
 
 
 def random_transaction_id():
