@@ -597,7 +597,10 @@ class CoinbaseAccount(object):
         params.update(self.auth_params)
 
         response = self.session.get(url=url, params=params)
-        return map(CoinbaseOrder.from_coinbase_dict, response.json()['orders'])
+        return list(map(
+            CoinbaseOrder.from_coinbase_dict,
+            response.json()['orders']
+        ))
 
     def get_order(self, id_or_custom_field, account_id=None):
         self._require_authentication()
