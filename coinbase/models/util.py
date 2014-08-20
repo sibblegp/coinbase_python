@@ -1,8 +1,13 @@
 import collections
 
+try:
+    stringtype = basestring  # python 2
+except:
+    stringtype = str  # python 3
+
 
 def coerce_to_list(x):
-    if isinstance(x, basestring):
+    if isinstance(x, stringtype):
         return x.replace(',', ' ').split()
     return x or []
 
