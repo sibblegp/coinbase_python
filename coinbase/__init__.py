@@ -565,12 +565,12 @@ class CoinbaseAccount(object):
         :return: Dict with str keys and Decimal values
         """
         url = coinbase_url('currencies', 'exchange_rates')
-        rates = json.loads(requests.get(url).content)
+        rates = requests.get(url).json()
         return dict(((k, Decimal(v)) for k, v in rates.items()))
 
     def get_exchange_rate(self, from_currency, to_currency):
         url = coinbase_url('currencies', 'exchange_rates')
-        rates = json.loads(requests.get(url).content)
+        rates = requests.get(url).json()
         return Decimal(rates['{}_to_{}'.format(
             from_currency.lower(), to_currency.lower()
         )])
