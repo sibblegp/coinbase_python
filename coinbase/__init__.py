@@ -33,8 +33,12 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 __author__ = 'gsibble'
 
-from oauth2client.client import AccessTokenRefreshError, OAuth2Credentials, \
-    AccessTokenCredentialsError
+try:
+    from oauth2client.client import AccessTokenRefreshError, \
+        OAuth2Credentials, AccessTokenCredentialsError
+    oauth2_supported = True
+except:
+    oauth2_supported = False
 
 import requests
 import httplib2
@@ -96,6 +100,9 @@ class CoinbaseAccount(object):
         self.authenticated = bool(oauth2_credentials or api_key)
 
         if oauth2_credentials:
+
+            if not oauth2_supported:
+                raise Exception('oauth2 is not supported in this environment')
 
             #CA Cert Path
             ca_directory = os.path.abspath(__file__).split('/')[0:-1]

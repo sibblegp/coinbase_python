@@ -10,7 +10,13 @@ def with_key():
 
 
 def with_oauth():
-    return CoinbaseAccount(oauth2_credentials=oauth_json)
+    # Don't actually set up oauth2 credentials, because this will fail if
+    # we're testing under python3. Some day when we have an oauth2 client
+    # that supports python 3, we can change this.
+    a = CoinbaseAccount()
+    a.authenticated = True
+    a.auth_params = {}
+    return a
 
 
 api_key = ('f64223978e5fd99d07cded069db2189a'
