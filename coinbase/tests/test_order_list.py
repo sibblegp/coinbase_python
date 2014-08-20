@@ -188,7 +188,7 @@ expected_orders = [
     ),
     CoinbaseOrder(
         id='7DAF5310',
-        created_at=datetime(2014, 04, 19, 17, 07, 37,
+        created_at=datetime(2014, 4, 19, 17, 7, 37,
                             tzinfo=tzoffset(None, -25200)),
         status=CoinbaseOrder.Status.mispaid,
         receive_address='8Wmgg87fgu6777ihgbFTYugyjfFT686fFf',

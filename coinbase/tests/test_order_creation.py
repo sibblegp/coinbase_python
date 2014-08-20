@@ -115,7 +115,7 @@ response_body = """
 
 expected_order = CoinbaseOrder(
     id='8QNULQFE',
-    created_at=datetime(2014, 02, 04, 23, 36, 30,
+    created_at=datetime(2014, 2, 4, 23, 36, 30,
                         tzinfo=tzoffset(None, -28800)),
     status=CoinbaseOrder.Status.pending,
     total=CoinbaseAmount.BtcAndNative(

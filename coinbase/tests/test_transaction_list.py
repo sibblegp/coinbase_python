@@ -148,7 +148,7 @@ response_body = """
 expected_transactions = [
     CoinbaseTransaction(
         amount=CoinbaseAmount('1', 'BTC'),
-        created_at=datetime(2013, 03, 23, 17, 43, 35,
+        created_at=datetime(2013, 3, 23, 17, 43, 35,
                             tzinfo=tzoffset(None, -25200)),
         id='514e4c37802e1bf69100000e',
         notes='Testing',
@@ -188,7 +188,7 @@ expected_transactions = [
     ),
     CoinbaseTransaction(
         amount=CoinbaseAmount('-1', 'BTC'),
-        created_at=datetime(2013, 3, 21, 17, 02, 57,
+        created_at=datetime(2013, 3, 21, 17, 2, 57,
                             tzinfo=tzoffset(None, -25200)),
         hash='42dd65a18dbea0779f32021663e60b1fab8ee0f859db7172a078d4528e01c6c8',
         id='514b9fb1b8377ee36500000d',
