@@ -38,7 +38,7 @@ def last_request_body():
 
 
 def last_request_json():
-    return json.loads(last_request_body())
+    return json.loads(last_request_body().decode('UTF-8'))
 
 
 def last_request_params():

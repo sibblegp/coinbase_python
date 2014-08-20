@@ -52,7 +52,7 @@ class CreateOrderFromButtonTest(TestCase):
         account = account_setup.with_key()
         order = account.create_order_from_button(
             button_id='93865b9cae83706ae59220c013bc0afd')
-        this(last_request_body()).should.equal('')
+        this(last_request_body()).should.equal(b'')
         this(last_request_params()).should.equal({
             'api_key': [account_setup.api_key],
         })
@@ -62,7 +62,7 @@ class CreateOrderFromButtonTest(TestCase):
         account = account_setup.with_oauth()
         order = account.create_order_from_button(
             button_id='93865b9cae83706ae59220c013bc0afd')
-        this(last_request_body()).should.equal('')
+        this(last_request_body()).should.equal(b'')
         this(last_request_params()).should.equal({})
         this(order).should.equal(expected_order)
 
