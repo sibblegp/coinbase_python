@@ -34,6 +34,11 @@ nosetests.xml
 .project
 .pydevproject
 
+# Vim
+*.swp
+
+# Other
+
 /.idea/
 /coinbase_oauth2/secrets.py
 /MANIFEST

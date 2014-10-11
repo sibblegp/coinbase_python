@@ -148,7 +148,6 @@ class CoinbaseAuth(AuthBase):
             raise AccessTokenRefreshError
 
     def __call__(self, req):
-        import pdb; pdb.set_trace()
         if self.oauth2_credentials:
             #Check if the oauth token is expired and refresh it if necessary
             self._check_oauth_expired()
