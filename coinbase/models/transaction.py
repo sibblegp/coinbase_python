@@ -1,69 +1,62 @@
-__author__ = 'gsibble'
+import dateutil.parser
+from enum import Enum
 
-from amount import CoinbaseAmount
-from contact import CoinbaseContact
+from .util import namedtuple
 
-class CoinbaseTransaction(object):
-
-    def __init__(self, transaction):
-
-        self.transaction_id = transaction['id']
-        self.created_at = transaction['created_at']
-        self.notes = transaction['notes']
-
-        transaction_amount = transaction['amount']['amount']
-        transaction_currency = transaction['amount']['currency']
-
-        self.amount = CoinbaseAmount(transaction_amount, transaction_currency)
-
-        self.status = transaction['status']
-        self.request = transaction['request']
+from .amount import CoinbaseAmount
+from .contact import CoinbaseContact
 
 
-        #Sender Information
-        if 'sender' in transaction:
-            sender_id = transaction['sender'].get('id', None)
-            sender_name = transaction['sender'].get('name', None)
-            sender_email = transaction['sender'].get('email', None)
+class CoinbaseTransaction(namedtuple(
+    'CoinbaseTransaction',
+    optional='id created_at notes amount status request hash idem '
+             'sender recipient recipient_address recipient_type'
+)):
+    """
+    status = CoinbaseTransaction.Status
+    request - bool
+    idem  - str
+    sender - CoinbaseContact
+    recipient - CoinbaseContact
+    recipient_type - 'coinbase' or 'bitcoin'
+    """
 
-            self.sender = CoinbaseContact(contact_id=sender_id,
-                                          name=sender_name,
-                                          email=sender_email)
+    class Status(Enum):
+        """
+        Enumeration of values for `CoinbaseTransaction.status`.
+        """
 
-        else:
-            #TODO:  Not sure what key would go here
-            pass
+        pending = 'pending'
 
-        #Recipient Info
-        if 'recipient' in transaction:
-            recipient_id = transaction['recipient'].get('id', None)
-            recipient_name = transaction['recipient'].get('name', None)
-            recipient_email = transaction['recipient'].get('email', None)
+        complete = 'complete'
 
-            self.recipient = CoinbaseContact(contact_id=recipient_id,
-                                          name=recipient_name,
-                                          email=recipient_email)
-            self.recipient_address = None
-            self.recipient_type = 'CoinBase'
+    @classmethod
+    def from_coinbase_dict(cls, x):
 
-        elif 'recipient_address' in transaction:
-            self.recipient = None
-            self.recipient_address = transaction['recipient_address']
-            self.recipient_type = 'Bitcoin'
+        t = CoinbaseTransaction(
+            id=x['id'],
+            created_at=dateutil.parser.parse(x['created_at']),
+            notes=x['notes'],
+            amount=CoinbaseAmount.from_coinbase_dict(x['amount']),
+            status=CoinbaseTransaction.Status(x['status']),
+            request=x['request'],
+            hash=x.get('hsh'),
+            recipient_type=('coinbase' if ('recipient' in x) else 'bitcoin'),
+            idem=(x.get('idem') or None),
+        )
 
-    def refresh(self):
-        pass
-        #TODO:  Refresh the transaction
+        if 'sender' in x:
+            t = t._replace(sender=CoinbaseContact.from_coinbase_dict(
+                x['sender']))
 
-    def cancel(self):
-        pass
-        #TODO:  Cancel the transaction if possible
+        if 'recipient' in x:
+            t = t._replace(
+                recipient=CoinbaseContact.from_coinbase_dict(x['recipient']),
+            )
 
-    def complete(self):
-        pass
-        #TODO:  Approve the transaction if possible
+        if 'recipient_address' in x:
+            t = t._replace(
+                recipient_address=x['recipient_address'],
+            )
 
-    def resend(self):
-        pass
-        #TODO:  Resend the transaction email if possible
-
+        return t

@@ -1,52 +1,53 @@
-__author__ = 'pmb6tz'
+import dateutil.parser
+from enum import Enum
 
-from amount import CoinbaseAmount
+from .util import namedtuple
+from .amount import CoinbaseAmount
 
-class CoinbaseTransfer(object):
 
-    def __init__(self, transfer):
-        self.type = transfer['type']
-        self.code = transfer['code']
-        self.created_at = transfer['created_at']
+class CoinbaseTransfer(namedtuple(
+    'CoinbaseTransfer',
+    optional='type code created_at fees_coinbase fees_bank '
+             'payout_date transaction_id status btc_amount '
+             'subtotal_amount total_amount description'
+)):
+    """
+    status - CoinbaseTransfer.Status
+    """
 
-        fees_coinbase_cents = transfer['fees']['coinbase']['cents']
-        fees_coinbase_currency_iso = transfer['fees']['coinbase']['currency_iso']
-        self.fees_coinbase = CoinbaseAmount(fees_coinbase_cents, fees_coinbase_currency_iso)
+    class Status(Enum):
+        """
+        Enumeration of values for `CoinbaseTransfer.status`.
+        """
 
-        fees_bank_cents = transfer['fees']['bank']['cents']
-        fees_bank_currency_iso = transfer['fees']['bank']['currency_iso']
-        self.fees_bank = CoinbaseAmount(fees_bank_cents, fees_bank_currency_iso)
+        pending = 'Pending'
 
-        self.payout_date = transfer['payout_date']
-        self.transaction_id = transfer.get('transaction_id','')
-        self.status = transfer['status']
+        complete = 'Complete'
 
-        btc_amount = transfer['btc']['amount']
-        btc_currency = transfer['btc']['currency']
-        self.btc_amount = CoinbaseAmount(btc_amount, btc_currency)
+        canceled = 'Canceled'
 
-        subtotal_amount = transfer['subtotal']['amount']
-        subtotal_currency = transfer['subtotal']['currency']
-        self.subtotal_amount = CoinbaseAmount(subtotal_amount, subtotal_currency)
+        reversed = 'Reversed'
 
-        total_amount = transfer['total']['amount']
-        total_currency = transfer['total']['currency']
-        self.total_amount = CoinbaseAmount(total_amount, total_currency)
-
-        self.description = transfer.get('description','')
-
-    def refresh(self):
-        pass
-        #TODO:  Refresh the transfer
-
-    def cancel(self):
-        pass
-        #TODO:  Cancel the transfer if possible
-
-    def complete(self):
-        pass
-        #TODO:  Approve the transfer if possible
-
-    def resend(self):
-        pass
-        #TODO:  Resend the transfer email if possible
+    @classmethod
+    def from_coinbase_dict(cls, transfer):
+        return CoinbaseTransfer(
+            type=transfer['type'],
+            code=transfer['code'],
+            created_at=dateutil.parser.parse(
+                transfer['created_at']),
+            fees_coinbase=CoinbaseAmount.from_coinbase_dict(
+                transfer['fees']['coinbase']),
+            fees_bank=CoinbaseAmount.from_coinbase_dict(
+                transfer['fees']['bank']),
+            payout_date=dateutil.parser.parse(
+                transfer['payout_date']),
+            transaction_id=transfer.get('transaction_id', ''),
+            status=CoinbaseTransfer.Status(transfer['status']),
+            btc_amount=CoinbaseAmount.from_coinbase_dict(
+                transfer['btc']),
+            subtotal_amount=CoinbaseAmount.from_coinbase_dict(
+                transfer['subtotal']),
+            total_amount=CoinbaseAmount.from_coinbase_dict(
+                transfer['total']),
+            description=transfer.get('description', ''),
+        )

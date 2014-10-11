@@ -1,8 +1,16 @@
 __author__ = 'gsibble'
 
-class CoinbaseContact(object):
+from .util import namedtuple
 
-    def __init__(self, contact_id=None, name=None, email=None):
-        self.id = contact_id
-        self.name = name
-        self.email = email
+
+class CoinbaseContact(namedtuple(
+    'CoinbaseContact',
+    optional='id name email'
+)):
+    @classmethod
+    def from_coinbase_dict(cls, x):
+        return CoinbaseContact(
+            id=x.get('id'),
+            name=x.get('name'),
+            email=x.get('email'),
+        )

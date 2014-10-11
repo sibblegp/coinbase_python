@@ -27,7 +27,7 @@ def receive_token():
 
     oauth_code = request.args['code']
 
-    print oauth_code
+    print(oauth_code)
 
     http = httplib2.Http(ca_certs='/etc/ssl/certs/ca-certificates.crt')
 
