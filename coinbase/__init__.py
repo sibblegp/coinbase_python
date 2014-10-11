@@ -301,7 +301,7 @@ class CoinbaseAccount(object):
 
     def sell_btc(self, qty):
         """
-        Sell BitCoin to Coinbase for USD
+        Sell Bitcoin to Coinbase for USD
         :param qty: BitCoin quantity to be sold
         :return: CoinbaseTransfer with all transfer details on success
         :raise: CoinbaseError with the error list received from Coinbase on
