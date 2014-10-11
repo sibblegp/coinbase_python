@@ -40,13 +40,18 @@ try:
 except:
     oauth2_supported = False
 
-import requests
 import httplib2
 import json
 import os
+import hashlib
+import hmac
+import time
 import re
-
 from decimal import Decimal
+from warnings import warn
+
+import requests
+from requests.auth import AuthBase
 
 from coinbase.config import COINBASE_ENDPOINT
 from coinbase.models import *
@@ -69,48 +74,21 @@ def coinbase_url(*args):
     return '/'.join([COINBASE_ENDPOINT] + args)
 
 
-class CoinbaseAccount(object):
-    """
-    Primary object for interacting with a Coinbase account
+class CoinbaseAuth(AuthBase):
+    def __init__(self, oauth2_credentials=None, api_key=None, api_secret=None):
+        #CA Cert Path
+        ca_directory = os.path.abspath(__file__).split('/')[0:-1]
 
-    You may use oauth credentials, a classic API key, or
-    no auth (for unauthenticated resources only)
-    """
+        ca_path = '/'.join(ca_directory) + '/ca_certs.txt'
 
-    def __init__(self, oauth2_credentials=None, api_key=None,
-                 allow_transfers=True):
-        """
-        :param oauth2_credentials: JSON representation of Coinbase oauth2
-                credentials
-        :param api_key:  Coinbase API key
-        :param allow_transfers: Whether to allow sending money.
-                You can set this to False for safety while in a development
-                environment if you want to more sure you don't actually send
-                any money around.
-        """
+        #Set CA certificates (breaks without them)
+        self.http = httplib2.Http(ca_certs=ca_path)
 
-        self.allow_transfers = allow_transfers
+        self.oauth2_credentials = None
 
-        #Set up our requests session
-        self.session = requests.session()
-
-        #Set our Content-Type
-        self.session.headers.update({'content-type': 'application/json'})
-
-        self.authenticated = bool(oauth2_credentials or api_key)
-
-        if oauth2_credentials:
-
+        if oauth2_credentials is not None:
             if not oauth2_supported:
-                raise Exception('oauth2 is not supported in this environment')
-
-            #CA Cert Path
-            ca_directory = os.path.abspath(__file__).split('/')[0:-1]
-
-            ca_path = '/'.join(ca_directory) + '/ca_certs.txt'
-
-            #Set CA certificates (breaks without them)
-            self.http = httplib2.Http(ca_certs=ca_path)
+                raise RuntimeError('oauth2 is not supported in this environment')
 
             #Create our credentials from the JSON sent
             self.oauth2_credentials = \
@@ -123,26 +101,14 @@ class CoinbaseAccount(object):
             except AccessTokenCredentialsError:
                 self.token_expired = True
 
-            #Apply our oAuth credentials to the session
-            self.oauth2_credentials.apply(headers=self.session.headers)
-
-            #Set our request parameters to be empty
-            self.auth_params = {}
+        elif api_key and api_secret:
+            self.api_key = api_key
+            self.api_secret = api_secret
 
         elif api_key:
-            #Set our API Key
+            warn("API key authentication without a secret has been deprecated"
+                 " by Coinbase- you should use a new key with a secret!")
             self.api_key = api_key
-
-            #Set our auth_params
-            self.auth_params = {'api_key': api_key}
-
-    def _require_allow_transfers(self):
-        if not self.allow_transfers:
-            raise Exception('Transfers are not enabled')
-
-    def _require_authentication(self):
-        if not self.authenticated:
-            raise Exception('Authentication credentials required')
 
     def _check_oauth_expired(self):
         """
@@ -151,9 +117,6 @@ class CoinbaseAccount(object):
 
         #Check if they are expired
         if self.oauth2_credentials.access_token_expired:
-
-            #Print an notification message if they are
-            print('oAuth2 Token Expired')
 
             #Raise the appropriate error
             raise AccessTokenCredentialsError
@@ -179,19 +142,77 @@ class CoinbaseAccount(object):
         #If the refresh token was invalid
         except AccessTokenRefreshError:
 
-            #Print a warning
-            print('Your refresh token is invalid')
+            warn('Your refresh token is invalid.')
 
             #Raise the appropriate error
             raise AccessTokenRefreshError
 
-    def _prepare_request(self):
+    def __call__(self, req):
+        import pdb; pdb.set_trace()
+        if self.oauth2_credentials:
+            #Check if the oauth token is expired and refresh it if necessary
+            self._check_oauth_expired()
+
+            self.oauth2_credentials.apply(headers=req.headers)
+        elif self.api_key is not None and self.api_secret is not None:
+            nonce = int(time.time() * 1e6)
+            message = str(nonce) + req.url + ('' if not req.body else req.body)
+            signature = hmac.new(self.api_secret, message, hashlib.sha256).hexdigest()
+            req.headers.update({'ACCESS_KEY': self.api_key,
+                                'ACCESS_SIGNATURE': signature,
+                                'ACCESS_NONCE': nonce})
+
+        elif self.api_key is not None:
+            req.params.update({'api_key': api_key})
+        return req
+
+
+class CoinbaseAccount(object):
+    """
+    Primary object for interacting with a Coinbase account
+
+    You may use oauth credentials, an API key + secret, a lone API key
+    (deprecated), or no auth (for unauthenticated resources only).
+    """
+
+    def __init__(self, oauth2_credentials=None, api_key=None, api_secret=None,
+                 allow_transfers=True):
         """
-        Prepare our request in various ways
+        :param oauth2_credentials: JSON representation of Coinbase oauth2
+                credentials
+        :param api_key: Coinbase API key
+        :param api_secret: Coinbase API secret. Typically included with a key,
+                since key-only auth is deprecated.
+        :param allow_transfers: Whether to allow sending money.
+                You can set this to False for safety while in a development
+                environment if you want to more sure you don't actually send
+                any money around.
         """
 
-        #Check if the oauth token is expired and refresh it if necessary
-        self._check_oauth_expired()
+        self.allow_transfers = allow_transfers
+
+        self.authenticated = (oauth2_credentials is not None
+                              or api_key is not None)
+        if self.authenticated:
+            self.auth = CoinbaseAuth(oauth2_credentials=oauth2_credentials,
+                                     api_key=api_key, api_secret=api_secret)
+        else:
+            self.auth = {}
+
+        #Set up our requests session
+        self.session = requests.session()
+        self.session.auth = self.auth
+
+        #Set our Content-Type
+        self.session.headers.update({'content-type': 'application/json'})
+
+    def _require_allow_transfers(self):
+        if not self.allow_transfers:
+            raise Exception('Transfers are not enabled')
+
+    def _require_authentication(self):
+        if not self.authenticated:
+            raise Exception('Authentication credentials required')
 
     @property
     def balance(self):
@@ -203,7 +224,7 @@ class CoinbaseAccount(object):
         self._require_authentication()
 
         url = coinbase_url('account', 'balance')
-        response = self.session.get(url, params=self.auth_params)
+        response = self.session.get(url)
         return CoinbaseAmount.from_coinbase_dict(response.json())
 
     @property
@@ -216,7 +237,7 @@ class CoinbaseAccount(object):
         self._require_authentication()
 
         url = coinbase_url('account', 'receive_address')
-        response = self.session.get(url, params=self.auth_params)
+        response = self.session.get(url)
         return response.json()['address']
 
     def contacts(self, page=None, limit=None, query=None):
@@ -227,7 +248,6 @@ class CoinbaseAccount(object):
         :param limit: Number of records to return. Maximum is 1000. Default
                       value is 25.
         :param query: Optional partial string match to filter contacts.
-
         :return: list of CoinbaseContact
         """
         self._require_authentication()
@@ -241,7 +261,6 @@ class CoinbaseAccount(object):
             params['limit'] = limit
         if query is not None:
             params['query'] = query
-        params.update(self.auth_params)
 
         response = self.session.get(url, params=params)
         return [CoinbaseContact.from_coinbase_dict(x['contact'])
@@ -256,8 +275,7 @@ class CoinbaseAccount(object):
         url = coinbase_url('prices', 'buy')
         params = {'qty': qty}
         response = self.session.get(url, params=params)
-        results = response.json()
-        return CoinbaseAmount.from_coinbase_dict(results)
+        return CoinbaseAmount.from_coinbase_dict(response.json())
 
     def sell_price(self, qty=1):
         """
@@ -290,8 +308,8 @@ class CoinbaseAccount(object):
             "qty": qty,
             "agree_btc_amount_varies": pricevaries
         }
-        response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.auth_params)
+        response = self.session.post(url=url, data=json.dumps(request_data))
+
         response_parsed = response.json()
         if not response_parsed.get('success'):
             raise CoinbaseError('Failed to buy btc.',
@@ -314,8 +332,7 @@ class CoinbaseAccount(object):
         request_data = {
             "qty": qty,
         }
-        response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.auth_params)
+        response = self.session.post(url=url, data=json.dumps(request_data))
         response_parsed = response.json()
         if not response_parsed.get('success'):
             raise CoinbaseError('Failed to sell btc.',
@@ -351,8 +368,7 @@ class CoinbaseAccount(object):
             request_data['transaction']['amount_string'] = str(amount.amount)
             request_data['transaction']['amount_currency_iso'] = amount.currency
 
-        response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.auth_params)
+        response = self.session.post(url=url, data=json.dumps(request_data))
         response_parsed = response.json()
         if not response_parsed.get('success'):
             raise CoinbaseError('Failed to request btc.',
@@ -403,8 +419,7 @@ class CoinbaseAccount(object):
         if idem is not None:
             request_data['transaction']['idem'] = str(idem)
 
-        response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.auth_params)
+        response = self.session.post(url=url, data=json.dumps(request_data))
         response_parsed = response.json()
 
         if not response_parsed.get('success'):
@@ -432,7 +447,6 @@ class CoinbaseAccount(object):
 
             if not reached_final_page:
                 params = {'page': page}
-                params.update(self.auth_params)
                 response = self.session.get(url=url, params=params)
                 parsed_transactions = response.json()
 
@@ -464,7 +478,6 @@ class CoinbaseAccount(object):
 
             if not reached_final_page:
                 params = {'page': page}
-                params.update(self.auth_params)
                 response = self.session.get(url=url, params=params)
                 parsed_transfers = response.json()
 
@@ -486,7 +499,7 @@ class CoinbaseAccount(object):
         self._require_authentication()
 
         url = coinbase_url('transactions', transaction_id)
-        response = self.session.get(url, params=self.auth_params)
+        response = self.session.get(url)
         results = response.json()
 
         if not results.get('success', True):
@@ -504,7 +517,7 @@ class CoinbaseAccount(object):
         self._require_authentication()
 
         url = coinbase_url('users')
-        response = self.session.get(url, params=self.auth_params)
+        response = self.session.get(url)
         results = response.json()
 
         return CoinbaseUser.from_coinbase_dict(results['users'][0]['user'])
@@ -523,8 +536,7 @@ class CoinbaseAccount(object):
                 'callback_url': callback_url
             }
         }
-        response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.auth_params)
+        response = self.session.post(url=url, data=json.dumps(request_data))
         return response.json()['address']
 
     def create_button(self, button, account_id=None):
@@ -551,8 +563,7 @@ class CoinbaseAccount(object):
         if account_id is not None:
             request_data['account_id'] = account_id
 
-        response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.auth_params)
+        response = self.session.post(url=url, data=json.dumps(request_data))
         resp_data = response.json()
         if not resp_data.get('success') or 'button' not in resp_data:
             error_msg = 'Error creating button'
@@ -601,7 +612,6 @@ class CoinbaseAccount(object):
             params['account_id'] = account_id
         if page is not None:
             params['page'] = page
-        params.update(self.auth_params)
 
         response = self.session.get(url=url, params=params)
         return list(map(
@@ -617,7 +627,6 @@ class CoinbaseAccount(object):
         params = {}
         if account_id is not None:
             params['account_id'] = account_id
-        params.update(self.auth_params)
 
         response = self.session.get(url=url, params=params)
         return CoinbaseOrder.from_coinbase_dict(response.json())
@@ -631,8 +640,7 @@ class CoinbaseAccount(object):
             'button': button.to_coinbase_dict()
         }
 
-        response = self.session.post(url=url, data=json.dumps(request_data),
-                                     params=self.auth_params)
+        response = self.session.post(url=url, data=json.dumps(request_data))
         return CoinbaseOrder.from_coinbase_dict(response.json())
 
     def create_order_from_button(self, button_id):
@@ -640,5 +648,5 @@ class CoinbaseAccount(object):
 
         url = coinbase_url('buttons', button_id, 'create_order')
 
-        response = self.session.post(url=url, params=self.auth_params)
+        response = self.session.post(url=url)
         return CoinbaseOrder.from_coinbase_dict(response.json())
