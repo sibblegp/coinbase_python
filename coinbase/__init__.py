@@ -86,6 +86,9 @@ class CoinbaseAuth(AuthBase):
 
         self.oauth2_credentials = None
 
+        self.api_key = api_key
+        self.api_secret = api_secret
+
         if oauth2_credentials is not None:
             if not oauth2_supported:
                 raise RuntimeError('oauth2 is not supported in this environment')
@@ -101,14 +104,9 @@ class CoinbaseAuth(AuthBase):
             except AccessTokenCredentialsError:
                 self.token_expired = True
 
-        elif api_key and api_secret:
-            self.api_key = api_key
-            self.api_secret = api_secret
-
-        elif api_key:
+        elif api_key and api_secret is None:
             warn("API key authentication without a secret has been deprecated"
                  " by Coinbase- you should use a new key with a secret!")
-            self.api_key = api_key
 
     def _check_oauth_expired(self):
         """
