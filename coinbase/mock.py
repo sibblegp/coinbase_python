@@ -33,6 +33,7 @@ class CoinbaseAccountMock(object):
         self._orders_by_custom = {}  # button custom string -> CoinbaseOrder.id
 
         self.authenticated = True
+        self.auth = None
         self.allow_transfers = True
 
         self.balance = CoinbaseAmount('0', 'BTC')
@@ -43,9 +44,6 @@ class CoinbaseAccountMock(object):
         }
 
         self.mock = MockControl(account=self)
-
-    def refresh_oauth(self):
-        pass
 
     def get_exchange_rate(self, from_currency, to_currency):
         return self.exchange_rates['{}_to_{}'.format(
