@@ -37,8 +37,14 @@ try:
     from oauth2client.client import AccessTokenRefreshError, \
         OAuth2Credentials, AccessTokenCredentialsError
     oauth2_supported = True
-except:
+except ImportError:
     oauth2_supported = False
+
+try:
+    from urllib import urlsplit, urlunsplit, quote
+except ImportError:
+    from urllib import quote
+    from urlparse import urlsplit, urlunsplit
 
 import httplib2
 import json
@@ -160,7 +166,11 @@ class CoinbaseAuth(AuthBase):
                                 'ACCESS_NONCE': nonce})
 
         elif self.api_key is not None:
-            req.params.update({'api_key': api_key})
+            url_parts = urlsplit(req.url)
+            new_query = '&'.join(
+                    filter(None, [url_parts.query,
+                                  quote('api_key={}'.format(self.api_key))]))
+            req.url = urlunsplit(url_parts._replace(query=new_query))
         return req
 
 

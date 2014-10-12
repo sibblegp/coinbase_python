@@ -24,7 +24,9 @@ class SellPriceTest1(TestCase):
 
     def go(self, account):
         this(account.sell_price()).should.equal(self.expected_price)
-        this(last_request_params()).should.equal({'qty': ['1']})
+        params = last_request_params()
+        params.pop('api_key', None)
+        this(params).should.equal({'qty': ['1']})
 
     response_body = """
     {
@@ -54,7 +56,9 @@ class SellPriceTest2(TestCase):
 
     def go(self, account):
         this(account.sell_price(10)).should.equal(self.expected_price)
-        this(last_request_params()).should.equal({'qty': ['10']})
+        params = last_request_params()
+        params.pop('api_key', None)
+        this(params).should.equal({'qty': ['10']})
 
     response_body = """
     {
