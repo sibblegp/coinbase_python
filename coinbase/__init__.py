@@ -41,7 +41,7 @@ except ImportError:
     oauth2_supported = False
 
 try:
-    from urllib import urlsplit, urlunsplit, quote
+    from urllib.parse import urlsplit, urlunsplit, quote
 except ImportError:
     from urllib import quote
     from urlparse import urlsplit, urlunsplit
