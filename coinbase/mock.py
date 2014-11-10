@@ -113,10 +113,12 @@ class CoinbaseAccountMock(object):
         return self._transactions[transaction_id]
 
     def get_user_details(self):
-        raise NotImplementedError  # todo
+        # todo - this could be mocked better
+        return CoinbaseUser(email='test@example.com')
 
     def generate_receive_address(self, callback_url=None):
-        raise NotImplementedError  # todo
+        # todo - this could be mocked better
+        return '1DzkRzSUqm8jGhT8wp7E8XNMcr9J3nT3SX'
 
     def create_button(self, button, account_id=None):
         id = random_button_id()
