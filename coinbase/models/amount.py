@@ -23,8 +23,7 @@ class CoinbaseAmount(namedtuple(
             return CoinbaseAmount(x['amount'], x['currency'])
         elif 'cents' in x:
             currency = x['currency_iso']
-            amount = x['cents'] / (SATOSHIS_IN_A_BITCOIN if currency == 'BTC'
-                                   else Decimal('100'))
+            amount = x['cents'] 
             return CoinbaseAmount(amount, currency)
         else:
             raise Exception
