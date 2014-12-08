@@ -384,7 +384,8 @@ class CoinbaseAccount(object):
         return CoinbaseTransaction \
             .from_coinbase_dict(response_parsed['transaction'])
 
-    def send(self, to_address, amount, notes='', user_fee=None, idem=None):
+    def send(self, to_address, amount, notes='', user_fee=None, idem=None,
+             token_2fa=None):
         """
         Send BitCoin from this account to either an email address or a BTC
         address
@@ -398,6 +399,8 @@ class CoinbaseAccount(object):
         transaction with the same idem parameter already exists for this
         sender, that previous transaction will be returned and a new one will
         not be created. Max length 100 characters.
+        :param token_2fa: Optional two factor token which might be necessary
+        depending on user permissions
         :return: CoinbaseTransaction with status and details
         :raise: CoinbaseError with the error list received from Coinbase on
                  failure
@@ -425,6 +428,9 @@ class CoinbaseAccount(object):
 
         if idem is not None:
             request_data['transaction']['idem'] = str(idem)
+
+        if token_2fa is not None:
+            self.session.headers.update({'CB-2FA-Token': token_2fa})
 
         response = self.session.post(url=url, data=json.dumps(request_data))
         response_parsed = response.json()
