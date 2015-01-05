@@ -574,10 +574,7 @@ class CoinbaseAccount(object):
         resp_data = response.json()
         if not resp_data.get('success') or 'button' not in resp_data:
             error_msg = 'Error creating button'
-            if 'errors' in resp_data:
-                error_msg += ':' + u'\n'.join(resp_data)
-            else:
-                error_msg += '.'
+            error_msg += ': ' + u'\n'.join(resp_data.get('errors',['Unknown']))
             raise RuntimeError(error_msg)
 
         return CoinbasePaymentButton.from_coinbase_dict(resp_data['button'])
