@@ -296,13 +296,21 @@ class CoinbaseAccount(object):
         results = response.json()
         return CoinbaseAmount.from_coinbase_dict(results)
 
-    def buy_btc(self, qty, pricevaries=False):
+    def buy_btc(self, qty, pricevaries=False, account_id=None, currency=None, commit=None, payment_method_id=None):
         """
         Buy BitCoin from Coinbase for USD
         :param qty: BitCoin quantity to be bought
         :param pricevaries: Boolean value that indicates whether or not the
                 transaction should be processed if Coinbase cannot guarantee
                 the current price.
+        :param account_id: Specify which account is used for crediting bought
+                amount. The default is your primary account.
+        :param currency: Currency of qty, must be either BTC or the currency
+                of the payment method
+        :param commit: Defaults to true. If set to false, this buy will not be
+                immediately completed.
+        :param payment_method_id: The ID of the payment method that should be
+                used for the buy.
         :return: CoinbaseTransfer with all transfer details on success
         :raise: CoinbaseError with the error list received from Coinbase on
                  failure
@@ -315,6 +323,16 @@ class CoinbaseAccount(object):
             "qty": qty,
             "agree_btc_amount_varies": pricevaries
         }
+
+        if account_id is not None:
+            request_data['account_id'] = account_id
+        if currency is not None:
+            request_data['currency'] = currency
+        if commit is not None:
+            request_data['commit'] = commit
+        if payment_method_id is not None:
+            request_data['payment_method_id'] = payment_method_id
+
         response = self.session.post(url=url, data=json.dumps(request_data))
 
         response_parsed = response.json()
